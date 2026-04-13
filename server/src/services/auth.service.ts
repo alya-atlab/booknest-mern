@@ -22,3 +22,21 @@ export const registerUser = async (data: RegisterUserInput) => {
 
   return user;
 };
+
+interface LoginUserInput {
+  email: string;
+  password: string;
+}
+export const LoginUser = async (data: LoginUserInput) => {
+  const findUser = await userModel
+    .findOne({ email: data.email })
+    .select("+password");
+  if (!findUser) {
+    throw new Error("Wrong email or password!");
+  }
+  const passwordMatch = await bcrypt.compare(data.password, findUser.password);
+  if (!passwordMatch) {
+    throw new Error("Wrong email or password!");
+  }
+  return findUser;
+};
