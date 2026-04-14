@@ -1,6 +1,6 @@
 import bcrypt from "bcrypt";
 import userModel from "../models/user.model";
-
+import { generateJWT } from "../utils/generateToken";
 interface RegisterUserInput {
   firstName: string;
   lastName: string;
@@ -17,26 +17,39 @@ export const registerUser = async (data: RegisterUserInput) => {
     ...data,
     password: hashedPassword,
   });
-
-  const user = await userModel.findById(createdUser._id);
-
-  return user;
+  const userId = createdUser._id.toString();
+  const token = generateJWT({
+    userId,
+    role: createdUser.role,
+  });
+  return {
+    token,
+    user: { id: userId, role: createdUser.role },
+  };
 };
 
 interface LoginUserInput {
   email: string;
   password: string;
 }
-export const LoginUser = async (data: LoginUserInput) => {
+export const loginUser = async (data: LoginUserInput) => {
   const findUser = await userModel
     .findOne({ email: data.email })
     .select("+password");
   if (!findUser) {
-    throw new Error("Wrong email or password!");
+    throw new Error("Invalid email or password");
   }
   const passwordMatch = await bcrypt.compare(data.password, findUser.password);
   if (!passwordMatch) {
-    throw new Error("Wrong email or password!");
+    throw new Error("Invalid email or password");
   }
-  return findUser;
+  const userId = findUser._id.toString();
+  const token = generateJWT({
+    userId,
+    role: findUser.role,
+  });
+  return {
+    token,
+    user: { id: userId, role: findUser.role },
+  };
 };
