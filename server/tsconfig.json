@@ -11,7 +11,7 @@
     "verbatimModuleSyntax": false,
     "isolatedModules": false,
     "moduleDetection": "auto",
-    "types": ["node"]
+    "types": ["node"],
   },
   "include": ["src"]
 }
