@@ -54,3 +54,20 @@ export const deleteBook = async (
   const book = await checkOwnership(bookId, userId, role);
   await book.deleteOne();
 };
+export interface BookUpdateInput {
+  title?: string;
+  description?: string;
+  price?: number;
+  coverImage?: string;
+}
+export const updateBook = async (
+  bookId: Types.ObjectId,
+  userId: Types.ObjectId,
+  role: "admin" | "author" | "user",
+  cleanData: Partial<BookUpdateInput>,
+) => {
+  const book = await checkOwnership(bookId, userId, role);
+  Object.assign(book, cleanData);
+  await book.save()
+  return book;
+};

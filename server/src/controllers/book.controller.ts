@@ -4,6 +4,8 @@ import {
   getBooks as getBooksService,
   getBookByID as getBookByIDService,
   deleteBook as deleteBookService,
+  updateBook as updateBookService,
+  BookUpdateInput,
 } from "../services/book.service";
 import { Types } from "mongoose";
 
@@ -71,5 +73,51 @@ export const deleteBook = async (req: Request, res: Response) => {
       return res.status(403).json({ message: "Forbidden" });
     }
     return res.status(500).json({ message: "Failed to delete the book" });
+  }
+};
+
+export const updateBook = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    if (typeof id !== "string" || !Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "Invalid ID" });
+    }
+    const bookId = new Types.ObjectId(id);
+    const user = req.user;
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+    const userId = new Types.ObjectId(user._id);
+    const userRole = user.role;
+
+    const body = req.body;
+    const cleanData: Partial<BookUpdateInput> = {};
+    
+    const allowedFields: (keyof BookUpdateInput)[] = [
+      "title",
+      "description",
+      "price",
+      "coverImage",
+    ];
+    for (const key of allowedFields) {
+      if (body[key] !== undefined) {
+        cleanData[key] = body[key];
+      }
+    }
+   if (Object.keys(cleanData).length === 0) {
+     return res.status(400).json({ message: "No valid fields to update" });
+   }
+    
+    const book = await updateBookService(bookId, userId, userRole, cleanData);
+    return res
+      .status(200)
+      .json({ message: "Book updated successfully", book });
+  } catch (error) {
+     if (error instanceof Error && error.message === "Book Not Found") {
+       return res.status(404).json({ message: "Book Not Found" });
+     }
+     if (error instanceof Error && error.message === "Forbidden") {
+       return res.status(403).json({ message: "Forbidden" });
+     }
+     return res.status(500).json({ message: "Failed to  update the book" });
   }
 };
