@@ -29,3 +29,28 @@ export const getBookByID = async (id: Types.ObjectId) => {
   }
   return book;
 };
+export const checkOwnership = async (
+  bookId: Types.ObjectId,
+  userId: Types.ObjectId,
+  role: "admin" | "author" | "user",
+) => {
+  const book = await bookModel.findById(bookId);
+  if (!book) {
+    throw new Error("Book Not Found");
+  }
+  if (role === "admin") {
+    return book;
+  }
+  if (!book.author.equals(userId)) {
+    throw new Error("Forbidden");
+  }
+  return book;
+};
+export const deleteBook = async (
+  bookId: Types.ObjectId,
+  userId: Types.ObjectId,
+  role: "admin" | "author" | "user",
+) => {
+  const book = await checkOwnership(bookId, userId, role);
+  await book.deleteOne();
+};
