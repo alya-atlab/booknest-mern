@@ -6,12 +6,14 @@ import {
   deleteBook,
   getBookByID,
   getBooks,
+  getMyBooks,
   updateBook,
 } from "../controllers/book.controller";
 
 const router = Router();
 router.post("/", protect, authorizeRoles("author", "admin"), createBook);
 router.get("/", getBooks);
+router.get("/my", protect, authorizeRoles("author", "admin"), getMyBooks);
 router.get("/:id", getBookByID);
 router.delete("/:id", protect, authorizeRoles("author", "admin"), deleteBook);
 router.put("/:id", protect, authorizeRoles("author", "admin"), updateBook);

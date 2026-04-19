@@ -6,6 +6,8 @@ import {
   deleteBook as deleteBookService,
   updateBook as updateBookService,
   BookUpdateInput,
+  getMyBooks as getMyBooksService,
+  BookFilter,
 } from "../services/book.service";
 import { Types } from "mongoose";
 
@@ -25,9 +27,22 @@ export const createBook = async (req: Request, res: Response) => {
       .json({ message: error.message || "Creation of book failed!" });
   }
 };
+
 export const getBooks = async (req: Request, res: Response) => {
   try {
-    const books = await getBooksService();
+   const { page, limit, author } = req.query as {
+     page?: string;
+     limit?: string;
+     author?: string;
+   };
+    const filter: BookFilter = {};
+    const pageNumber = Number(page) || 1;
+    const limitNumber = Number(limit) || 10;
+    const skip = (pageNumber - 1) * limitNumber;
+    if (author) {
+      filter.author = author;
+    }
+    const books = await getBooksService(skip, limitNumber, filter);
     res.status(200).json({ message: "Books fetched successfully", books });
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch books" });
@@ -51,6 +66,23 @@ export const getBookByID = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Failed to fetch the book" });
   }
 };
+export const getMyBooks = async (req: Request, res: Response) => {
+  try {
+    const user = req.user;
+    console.log(user);
+    if (!user) return res.status(401).json({ message: "Unauthorized" });
+    if (!Types.ObjectId.isValid(user._id)) {
+      return res.status(400).json({ message: "Invalid user ID" });
+    }
+    const userId = new Types.ObjectId(user._id);
+    console.log(userId);
+    const books = await getMyBooksService(userId);
+    res.status(200).json({ message: "Books fetched successfully", books });
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch books" });
+  }
+};
+
 export const deleteBook = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
@@ -91,7 +123,7 @@ export const updateBook = async (req: Request, res: Response) => {
 
     const body = req.body;
     const cleanData: Partial<BookUpdateInput> = {};
-    
+
     const allowedFields: (keyof BookUpdateInput)[] = [
       "title",
       "description",
@@ -103,21 +135,19 @@ export const updateBook = async (req: Request, res: Response) => {
         cleanData[key] = body[key];
       }
     }
-   if (Object.keys(cleanData).length === 0) {
-     return res.status(400).json({ message: "No valid fields to update" });
-   }
-    
+    if (Object.keys(cleanData).length === 0) {
+      return res.status(400).json({ message: "No valid fields to update" });
+    }
+
     const book = await updateBookService(bookId, userId, userRole, cleanData);
-    return res
-      .status(200)
-      .json({ message: "Book updated successfully", book });
+    return res.status(200).json({ message: "Book updated successfully", book });
   } catch (error) {
-     if (error instanceof Error && error.message === "Book Not Found") {
-       return res.status(404).json({ message: "Book Not Found" });
-     }
-     if (error instanceof Error && error.message === "Forbidden") {
-       return res.status(403).json({ message: "Forbidden" });
-     }
-     return res.status(500).json({ message: "Failed to  update the book" });
+    if (error instanceof Error && error.message === "Book Not Found") {
+      return res.status(404).json({ message: "Book Not Found" });
+    }
+    if (error instanceof Error && error.message === "Forbidden") {
+      return res.status(403).json({ message: "Forbidden" });
+    }
+    return res.status(500).json({ message: "Failed to  update the book" });
   }
 };

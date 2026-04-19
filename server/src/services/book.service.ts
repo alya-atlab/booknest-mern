@@ -16,8 +16,19 @@ export const createBook = async (data: BookInput, author: Types.ObjectId) => {
   const createdBook = await bookModel.create({ ...data, author });
   return createdBook;
 };
-export const getBooks = async () => {
-  return bookModel.find().populate("author", "firstName lastName email");
+export interface BookFilter {
+  author?: string;
+}
+export const getBooks = async (
+  skip: number,
+  limit: number,
+  filter: BookFilter,
+) => {
+  return bookModel
+    .find(filter)
+    .skip(skip)
+    .limit(limit)
+    .populate("author", "firstName lastName email");
 };
 
 export const getBookByID = async (id: Types.ObjectId) => {
@@ -29,6 +40,12 @@ export const getBookByID = async (id: Types.ObjectId) => {
   }
   return book;
 };
+
+export const getMyBooks = async (userId: Types.ObjectId) => {
+  const books = await bookModel.find({ author: userId });
+  return books;
+};
+
 export const checkOwnership = async (
   bookId: Types.ObjectId,
   userId: Types.ObjectId,
@@ -68,6 +85,6 @@ export const updateBook = async (
 ) => {
   const book = await checkOwnership(bookId, userId, role);
   Object.assign(book, cleanData);
-  await book.save()
+  await book.save();
   return book;
 };
