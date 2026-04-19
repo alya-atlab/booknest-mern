@@ -1,11 +1,16 @@
 import { NextFunction, Request, Response } from "express";
+import { ApiError } from "../utils/ApiError";
 
 export const authorizeRoles = (...roles: string[]) => {
   return (req: Request, res: Response, next: NextFunction) => {
     const user = req.user;
-    if (!user) return res.status(401).json({ message: "Unauthorized" });
-    if (!roles.includes(user.role))
-      return res.status(403).json({ message: "Forbidden" });
+    if (!user) {
+      return next(new ApiError("Unauthorized", 401));
+    }
+    if (!roles.includes(user.role)) {
+      return next(new ApiError("Forbidden", 403));
+    }
+
     next();
   };
 };

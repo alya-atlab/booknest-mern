@@ -10,114 +10,98 @@ import {
   BookFilter,
 } from "../services/book.service";
 import { Types } from "mongoose";
+import { ApiError } from "../utils/ApiError";
 
 export const createBook = async (req: Request, res: Response) => {
-  try {
-    const user = req.user;
-    if (!user) return res.status(401).json({ message: "Unauthorized" });
-    const data = req.body;
-    const authorId = new Types.ObjectId(user._id);
-    const createdBook = await createBookService(data, authorId);
-    res
-      .status(201)
-      .json({ message: "Book created successfully", data: createdBook });
-  } catch (error: any) {
-    res
-      .status(500)
-      .json({ message: error.message || "Creation of book failed!" });
-  }
+  const user = req.user;
+  if (!user) throw new ApiError("Unauthorized", 401);
+  const data = req.body;
+  const authorId = new Types.ObjectId(user._id);
+  const createdBook = await createBookService(data, authorId);
+    res.status(201).json({
+      success: true,
+      data: createdBook,
+    });
 };
 
 export const getBooks = async (req: Request, res: Response) => {
-  try {
-   const { page, limit, author } = req.query as {
-     page?: string;
-     limit?: string;
-     author?: string;
-   };
-    const filter: BookFilter = {};
-    const pageNumber = Number(page) || 1;
-    const limitNumber = Number(limit) || 10;
-    const skip = (pageNumber - 1) * limitNumber;
-    if (author) {
-      filter.author = author;
-    }
-    const books = await getBooksService(skip, limitNumber, filter);
-    res.status(200).json({ message: "Books fetched successfully", books });
-  } catch (error) {
-    res.status(500).json({ message: "Failed to fetch books" });
+  const { page, limit, author } = req.query as {
+    page?: string;
+    limit?: string;
+    author?: string;
+  };
+  const filter: BookFilter = {};
+  const pageNumber = Number(page) || 1;
+  const limitNumber = Number(limit) || 10;
+  const skip = (pageNumber - 1) * limitNumber;
+  if (author) {
+   filter.author = new Types.ObjectId(author);
   }
+  const books = await getBooksService(skip, limitNumber, filter);
+   res.status(200).json({
+     success: true,
+     data: books,
+   });
 };
 export const getBookByID = async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
+  const { id } = req.params;
 
-    if (typeof id !== "string" || !Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ message: "Invalid ID" });
-    }
-    const bookId = new Types.ObjectId(id);
-
-    const book = await getBookByIDService(bookId);
-    res.status(200).json({ message: "Book fetched successfully", book });
-  } catch (error) {
-    if (error instanceof Error && error.message === "Book Not Found") {
-      return res.status(404).json({ message: "Book Not Found" });
-    }
-    res.status(500).json({ message: "Failed to fetch the book" });
+  if (typeof id !== "string" || !Types.ObjectId.isValid(id)) {
+    throw new ApiError("Invalid ID", 400);
   }
+  const bookId = new Types.ObjectId(id);
+
+  const book = await getBookByIDService(bookId);
+   res.status(200).json({
+     success: true,
+     data: book,
+   });
 };
 export const getMyBooks = async (req: Request, res: Response) => {
-  try {
-    const user = req.user;
-    console.log(user);
-    if (!user) return res.status(401).json({ message: "Unauthorized" });
-    if (!Types.ObjectId.isValid(user._id)) {
-      return res.status(400).json({ message: "Invalid user ID" });
-    }
-    const userId = new Types.ObjectId(user._id);
-    console.log(userId);
-    const books = await getMyBooksService(userId);
-    res.status(200).json({ message: "Books fetched successfully", books });
-  } catch (error) {
-    res.status(500).json({ message: "Failed to fetch books" });
+  const user = req.user;
+
+  if (!user) throw new ApiError("Unauthorized", 401);
+
+  if (!Types.ObjectId.isValid(user._id)) {
+    throw new ApiError("Invalid user ID", 400);
   }
+
+  const userId = new Types.ObjectId(user._id);
+  const books = await getMyBooksService(userId);
+
+  res.status(200).json({
+    success: true,
+    data: books,
+  });
 };
-
 export const deleteBook = async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
+  const { id } = req.params;
 
-    if (typeof id !== "string" || !Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ message: "Invalid ID" });
-    }
-    const bookId = new Types.ObjectId(id);
-    const user = req.user;
-    if (!user) return res.status(401).json({ message: "Unauthorized" });
-    const userId = new Types.ObjectId(user._id);
-    const userRole = user.role;
-    await deleteBookService(bookId, userId, userRole);
-    return res.status(200).json({ message: "Book deleted successfully" });
-  } catch (error) {
-    if (error instanceof Error && error.message === "Book Not Found") {
-      return res.status(404).json({ message: "Book Not Found" });
-    }
-    if (error instanceof Error && error.message === "Forbidden") {
-      return res.status(403).json({ message: "Forbidden" });
-    }
-    return res.status(500).json({ message: "Failed to delete the book" });
+  if (typeof id !== "string" || !Types.ObjectId.isValid(id)) {
+    throw new ApiError("Invalid ID", 400);
   }
+  const bookId = new Types.ObjectId(id);
+  const user = req.user;
+  if (!user) throw new ApiError("Unauthorized", 401);
+  const userId = new Types.ObjectId(user._id);
+  const userRole = user.role;
+  await deleteBookService(bookId, userId, userRole);
+   res.status(204).json({
+     success: true,
+    message:"Book Deleted"
+   });
 };
 
 export const updateBook = async (req: Request, res: Response) => {
-  try {
+ 
     const { id } = req.params;
 
     if (typeof id !== "string" || !Types.ObjectId.isValid(id)) {
-      return res.status(400).json({ message: "Invalid ID" });
+      throw new ApiError("Invalid ID", 400);
     }
     const bookId = new Types.ObjectId(id);
     const user = req.user;
-    if (!user) return res.status(401).json({ message: "Unauthorized" });
+    if (!user) throw new ApiError("Unauthorized", 401);
     const userId = new Types.ObjectId(user._id);
     const userRole = user.role;
 
@@ -136,18 +120,13 @@ export const updateBook = async (req: Request, res: Response) => {
       }
     }
     if (Object.keys(cleanData).length === 0) {
-      return res.status(400).json({ message: "No valid fields to update" });
+      throw new ApiError("No valid fields to update", 400);
     }
 
     const book = await updateBookService(bookId, userId, userRole, cleanData);
-    return res.status(200).json({ message: "Book updated successfully", book });
-  } catch (error) {
-    if (error instanceof Error && error.message === "Book Not Found") {
-      return res.status(404).json({ message: "Book Not Found" });
-    }
-    if (error instanceof Error && error.message === "Forbidden") {
-      return res.status(403).json({ message: "Forbidden" });
-    }
-    return res.status(500).json({ message: "Failed to  update the book" });
-  }
+      res.status(200).json({
+        success: true,
+        data: book,
+      });
+  
 };

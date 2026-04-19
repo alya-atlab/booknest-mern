@@ -4,6 +4,7 @@ import connectDB from "./config/db";
 import authRoutes from "./routes/auth.route";
 import userRoutes from "./routes/user.route";
 import bookRoutes from "./routes/book.route";
+import { errorMiddleware } from "./middlewares/error.middleware";
 dotenv.config();
 
 const app = express();
@@ -15,4 +16,5 @@ connectDB();
 app.use("/auth", authRoutes);
 app.use("/user", userRoutes);
 app.use("/books", bookRoutes);
+app.use(errorMiddleware);
 app.listen(PORT, () => console.log(`API running on ${PORT}`));

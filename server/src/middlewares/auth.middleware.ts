@@ -1,18 +1,19 @@
 import { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
+import { ApiError } from "../utils/ApiError";
 
 const protect = (req: Request, res: Response, next: NextFunction) => {
   const authorizationHeader = req.headers.authorization;
   if (!authorizationHeader) {
-    return res.status(403).json({message:"authorization header was not provided"});
+    return next(new ApiError("authorization header was not provided", 401));
   }
   const [prefix, token] = authorizationHeader.split(" ");
 
   if (prefix !== "Bearer" || !token) {
-    return res.status(401).json({ message: "Not authorized" });
+    return next(new ApiError("Unauthorized", 401));
   }
   if (!process.env.JWT_SECRET) {
-    return res.status(403).json({message: "JWT_SECRET is not defined"});
+    return next(new ApiError("JWT_SECRET is not defined", 403));
   }
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -25,7 +26,7 @@ const protect = (req: Request, res: Response, next: NextFunction) => {
     req.user = { _id: userPayload.userId, role: userPayload.role };
     next();
   } catch {
-    return res.status(401).json({message: "Invalid Token!"});
+    return next(new ApiError("Invalid Token", 403));
   }
 };
 export default protect;
