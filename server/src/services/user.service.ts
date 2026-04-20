@@ -7,11 +7,11 @@ export const getUsers = async () => {
   return userModel.find();
 };
 export const getUserById = async (userId: Types.ObjectId) => {
-  const user = await userModel.findById(userId);
-  if (!user) {
-    throw new ApiError("User Not Found", 404);
+  const targetUser = await userModel.findById(userId);
+  if (!targetUser) {
+    throw new ApiError("User not found", 404);
   }
-  return user;
+  return targetUser;
 };
 interface userUpdateInput {
   firstName?: string;
@@ -22,9 +22,9 @@ export const updateUser = async (
   userId: Types.ObjectId,
   cleanData: Partial<userUpdateInput>,
 ) => {
-  const user = await userModel.findById(userId);
+  const targetUser = await userModel.findById(userId);
 
-  if (!user) {
+  if (!targetUser) {
     throw new ApiError("User not found", 404);
   }
   const allowedFields: (keyof userUpdateInput)[] = [
@@ -55,7 +55,7 @@ export const updateUser = async (
 
   if (filteredData.email !== undefined) {
     filteredData.email = validateEmail(filteredData.email);
-    const currentEmail = user.email.trim().toLowerCase();
+    const currentEmail = targetUser.email.trim().toLowerCase();
     if (filteredData.email !== currentEmail) {
       const existingUser = await userModel.findOne({
         email: filteredData.email,
@@ -67,9 +67,9 @@ export const updateUser = async (
     }
   }
 
-  Object.assign(user, filteredData);
+  Object.assign(targetUser, filteredData);
 
-  await user.save();
+  await targetUser.save();
 
-  return user;
+  return targetUser;
 };
