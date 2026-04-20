@@ -24,7 +24,10 @@ export const registerUser = async ({
       400,
     );
   }
-  if (!email.includes("@") || !email.includes(".")) {
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+  if (!emailRegex.test(email)) {
     throw new ApiError("Invalid email format", 400);
   }
   if (password.length < 6) {
