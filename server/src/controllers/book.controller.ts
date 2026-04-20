@@ -18,10 +18,10 @@ export const createBook = async (req: Request, res: Response) => {
   const data = req.body;
   const authorId = new Types.ObjectId(user._id);
   const createdBook = await createBookService(data, authorId);
-    res.status(201).json({
-      success: true,
-      data: createdBook,
-    });
+  res.status(201).json({
+    success: true,
+    data: createdBook,
+  });
 };
 
 export const getBooks = async (req: Request, res: Response) => {
@@ -35,13 +35,13 @@ export const getBooks = async (req: Request, res: Response) => {
   const limitNumber = Number(limit) || 10;
   const skip = (pageNumber - 1) * limitNumber;
   if (author) {
-   filter.author = new Types.ObjectId(author);
+    filter.author = new Types.ObjectId(author);
   }
   const books = await getBooksService(skip, limitNumber, filter);
-   res.status(200).json({
-     success: true,
-     data: books,
-   });
+  res.status(200).json({
+    success: true,
+    data: books,
+  });
 };
 export const getBookByID = async (req: Request, res: Response) => {
   const { id } = req.params;
@@ -52,10 +52,10 @@ export const getBookByID = async (req: Request, res: Response) => {
   const bookId = new Types.ObjectId(id);
 
   const book = await getBookByIDService(bookId);
-   res.status(200).json({
-     success: true,
-     data: book,
-   });
+  res.status(200).json({
+    success: true,
+    data: book,
+  });
 };
 export const getMyBooks = async (req: Request, res: Response) => {
   const user = req.user;
@@ -86,47 +86,47 @@ export const deleteBook = async (req: Request, res: Response) => {
   const userId = new Types.ObjectId(user._id);
   const userRole = user.role;
   await deleteBookService(bookId, userId, userRole);
-   res.status(204).json({
-     success: true,
-    message:"Book Deleted"
-   });
+  res.status(204).json({
+    success: true,
+    message: "Book Deleted",
+  });
 };
+interface Params {
+  id?: string;
+}
+export const updateBook = async (req: Request<Params>, res: Response) => {
+  const { id } = req.params;
 
-export const updateBook = async (req: Request, res: Response) => {
- 
-    const { id } = req.params;
+  if (!id || !Types.ObjectId.isValid(id)) {
+    throw new ApiError("Invalid ID", 400);
+  }
+  const bookId = new Types.ObjectId(id);
+  const user = req.user;
+  if (!user) throw new ApiError("Unauthorized", 401);
+  const userId = new Types.ObjectId(user._id);
+  const userRole = user.role;
 
-    if (typeof id !== "string" || !Types.ObjectId.isValid(id)) {
-      throw new ApiError("Invalid ID", 400);
+  const body = req.body;
+  const cleanData: Partial<BookUpdateInput> = {};
+
+  const allowedFields: (keyof BookUpdateInput)[] = [
+    "title",
+    "description",
+    "price",
+    "coverImage",
+  ];
+  for (const key of allowedFields) {
+    if (body[key] !== undefined) {
+      cleanData[key] = body[key];
     }
-    const bookId = new Types.ObjectId(id);
-    const user = req.user;
-    if (!user) throw new ApiError("Unauthorized", 401);
-    const userId = new Types.ObjectId(user._id);
-    const userRole = user.role;
+  }
+  if (Object.keys(cleanData).length === 0) {
+    throw new ApiError("No valid fields to update", 400);
+  }
 
-    const body = req.body;
-    const cleanData: Partial<BookUpdateInput> = {};
-
-    const allowedFields: (keyof BookUpdateInput)[] = [
-      "title",
-      "description",
-      "price",
-      "coverImage",
-    ];
-    for (const key of allowedFields) {
-      if (body[key] !== undefined) {
-        cleanData[key] = body[key];
-      }
-    }
-    if (Object.keys(cleanData).length === 0) {
-      throw new ApiError("No valid fields to update", 400);
-    }
-
-    const book = await updateBookService(bookId, userId, userRole, cleanData);
-      res.status(200).json({
-        success: true,
-        data: book,
-      });
-  
+  const book = await updateBookService(bookId, userId, userRole, cleanData);
+  res.status(200).json({
+    success: true,
+    data: book,
+  });
 };
