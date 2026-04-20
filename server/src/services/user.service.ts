@@ -1,6 +1,7 @@
 import { Types } from "mongoose";
 import userModel from "../models/user.model";
 import { ApiError } from "../utils/ApiError";
+import { validateEmail, validateName } from "../validators/user.validator";
 
 export const getUsers = async () => {
   return userModel.find();
@@ -21,14 +22,22 @@ export const updateUser = async (
   userId: Types.ObjectId,
   cleanData: Partial<userUpdateInput>,
 ) => {
-  const allowedFields = ["firstName", "lastName", "email"];
+  const user = await userModel.findById(userId);
+
+  if (!user) {
+    throw new ApiError("User not found", 404);
+  }
+  const allowedFields: (keyof userUpdateInput)[] = [
+    "firstName",
+    "lastName",
+    "email",
+  ];
 
   const filteredData: Partial<userUpdateInput> = {};
 
   for (const key of allowedFields) {
-    if (cleanData[key as keyof userUpdateInput] !== undefined) {
-      filteredData[key as keyof userUpdateInput] =
-        cleanData[key as keyof userUpdateInput];
+    if (cleanData[key] !== undefined) {
+      filteredData[key] = cleanData[key];
     }
   }
 
@@ -37,55 +46,25 @@ export const updateUser = async (
   }
 
   if (filteredData.firstName !== undefined) {
-    if (typeof filteredData.firstName !== "string") {
-      throw new ApiError("First name must be string", 400);
-    }
-    filteredData.firstName = filteredData.firstName.trim();
-    if (!filteredData.firstName) {
-      throw new ApiError("First name cannot be empty", 400);
-    }
+    filteredData.firstName = validateName(filteredData.firstName, "First Name");
   }
 
   if (filteredData.lastName !== undefined) {
-    if (typeof filteredData.lastName !== "string") {
-      throw new ApiError("Last name must be string", 400);
-    }
-    filteredData.lastName = filteredData.lastName.trim();
-    if (!filteredData.lastName) {
-      throw new ApiError("Last name cannot be empty", 400);
-    }
+    filteredData.lastName = validateName(filteredData.lastName, "Last Name");
   }
 
   if (filteredData.email !== undefined) {
-    if (typeof filteredData.email !== "string") {
-      throw new ApiError("Email must be string", 400);
+    filteredData.email = validateEmail(filteredData.email);
+    const currentEmail = user.email.trim().toLowerCase();
+    if (filteredData.email !== currentEmail) {
+      const existingUser = await userModel.findOne({
+        email: filteredData.email,
+      });
+
+      if (existingUser && existingUser._id.toString() !== userId.toString()) {
+        throw new ApiError("Email already registered", 400);
+      }
     }
-
-    filteredData.email = filteredData.email.trim().toLowerCase();
-
-    if (!filteredData.email) {
-      throw new ApiError("Email cannot be empty", 400);
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-    if (!emailRegex.test(filteredData.email)) {
-      throw new ApiError("Invalid email format", 400);
-    }
-
-    const existingUser = await userModel.findOne({
-      email: filteredData.email,
-    });
-
-    if (existingUser && existingUser._id.toString() !== userId.toString()) {
-      throw new ApiError("Email already registered", 400);
-    }
-  }
-
-  const user = await userModel.findById(userId);
-
-  if (!user) {
-    throw new ApiError("User not found", 404);
   }
 
   Object.assign(user, filteredData);
