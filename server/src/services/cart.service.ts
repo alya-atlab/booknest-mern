@@ -8,7 +8,7 @@ const createNewCart = async (userId: Types.ObjectId) => {
 
   return cart;
 };
-const getCart = async (userId: Types.ObjectId) => {
+export const getCart = async (userId: Types.ObjectId) => {
   let cart = await cartModel.findOne({ userId });
   if (!cart) {
     const newCart = await createNewCart(userId);
@@ -36,4 +36,43 @@ export const addToCart = async ({ userId, bookId }: AddToCartInput) => {
   }
   await userCart.save();
   return userCart;
+};
+
+interface UpdateItemInput {
+  userId: Types.ObjectId;
+  bookId: Types.ObjectId;
+  quantity: number;
+}
+export const updateItem = async ({
+  userId,
+  bookId,
+  quantity,
+}: UpdateItemInput) => {
+  const cart = await getCart(userId);
+  const item = cart.items.find((item) => item.bookId.equals(bookId));
+  if (!item) {
+    throw new ApiError("Item not found", 404);
+  }
+  if (quantity === 0) {
+    cart.items = cart.items.filter((i) => !i.bookId.equals(bookId));
+    await cart.save();
+    return cart;
+  }
+  item.quantity = quantity;
+  await cart.save();
+  return cart;
+};
+interface DeleteItemInput {
+  userId: Types.ObjectId;
+  bookId: Types.ObjectId;
+}
+export const deleteItem = async ({ userId, bookId }: DeleteItemInput) => {
+  const cart = await getCart(userId);
+  const item = cart.items.find((item) => item.bookId.equals(bookId));
+  if (!item) {
+    throw new ApiError("Item not found", 404);
+  }
+  cart.items = cart.items.filter((i) => !i.bookId.equals(bookId));
+  await cart.save();
+  return cart;
 };

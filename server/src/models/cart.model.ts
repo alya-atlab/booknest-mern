@@ -4,7 +4,7 @@ interface IItems {
   bookId: Types.ObjectId;
   quantity: number;
 }
-interface ICart {
+interface ICart extends Document {
   userId: Types.ObjectId;
   items: IItems[];
 }

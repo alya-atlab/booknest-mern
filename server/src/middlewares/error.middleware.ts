@@ -10,6 +10,6 @@ export const errorMiddleware = async (
   const statusCode = err.statusCode;
   const message = err.message;
   res
-    .status(statusCode)
+    .status(statusCode ||500)
     .json({ success: false, message: message || "Internal Server Error" });
 };
