@@ -35,3 +35,30 @@ export const checkout = async (userId: Types.ObjectId) => {
   await cart.save();
   return order;
 };
+
+export const getOrders = async () => {
+  return orderModel.find().sort({ createdAt: -1 });
+};
+
+export const getMyOrders = async (userId: Types.ObjectId) => {
+  return orderModel.find({ userId }).sort({ createdAt: -1 });
+};
+interface getOrderInput {
+  orderId: Types.ObjectId;
+  userId: Types.ObjectId;
+  userRole: "admin" | "author" | "user";
+}
+export const getOrderById = async ({
+  orderId,
+  userId,
+  userRole,
+}: getOrderInput) => {
+  const order = await orderModel.findById(orderId);
+  if (!order) {
+    throw new ApiError("Order not found", 404);
+  }
+  if (userRole !== "admin" && !order.userId.equals(userId)) {
+    throw new ApiError("Forbidden", 403);
+  }
+  return order;
+};

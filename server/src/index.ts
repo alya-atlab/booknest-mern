@@ -19,6 +19,6 @@ app.use("/auth", authRoutes);
 app.use("/user", userRoutes);
 app.use("/books", bookRoutes);
 app.use("/cart", cartRoutes);
-app.use("/order", orderRoutes);
+app.use("/orders", orderRoutes);
 app.use(errorMiddleware);
 app.listen(PORT, () => console.log(`API running on ${PORT}`));
