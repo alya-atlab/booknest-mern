@@ -4,9 +4,12 @@ import {
   getOrders as getOrdersService,
   getMyOrders as getMyOrdersService,
   getOrderById as getOrderByIdService,
+  updateStatus as updateStatusService,
 } from "../services/order.service";
 import { Types } from "mongoose";
 import { ApiError } from "../utils/ApiError";
+import { getUserById } from "./user.controller";
+import { OrderStatus } from "../constants/order.constants";
 
 export const checkout = async (req: Request, res: Response) => {
   const id = req.user?._id;
@@ -60,6 +63,27 @@ export const getOrderById = async (req: Request, res: Response) => {
     userRole: user.role,
     orderId,
   });
+  res.status(200).json({
+    success: true,
+    data: order,
+  });
+};
+
+export const updateStatus = async (req: Request, res: Response) => {
+  const user = req.user;
+  if (!user) throw new ApiError("Unauthorized", 401);
+  const userRole = user.role;
+
+  const { id } = req.params;
+  if (typeof id !== "string" || !Types.ObjectId.isValid(id)) {
+    throw new ApiError("Invalid orderId", 400);
+  }
+  const orderId = new Types.ObjectId(id);
+  const newStatus = req.body.status as OrderStatus;
+  if (typeof newStatus !== "string") {
+    throw new ApiError("Order status is required in request body", 400);
+  }
+  const order = await updateStatusService({ userRole, orderId, newStatus });
   res.status(200).json({
     success: true,
     data: order,

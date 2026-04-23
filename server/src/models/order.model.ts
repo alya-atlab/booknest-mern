@@ -1,6 +1,5 @@
 import mongoose, { Schema, Document, Types } from "mongoose";
-
-const ORDER_STATUS = ["pending", "completed"];
+import { ORDER_STATUS } from "../constants/order.constants";
 
 interface IOrderItems {
   bookId: Types.ObjectId;
@@ -12,7 +11,7 @@ interface IOrder {
   userId: Types.ObjectId;
   items: IOrderItems[];
   totalAmount: number;
-  status: "pending" | "completed";
+  status: "pending" | "processing" | "completed" | "cancelled";
 }
 
 const orderItemSchema = new Schema<IOrderItems>({
