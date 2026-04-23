@@ -5,6 +5,7 @@ import authRoutes from "./routes/auth.route";
 import userRoutes from "./routes/user.route";
 import bookRoutes from "./routes/book.route";
 import cartRoutes from "./routes/cart.route";
+import orderRoutes from "./routes/order.route";
 import { errorMiddleware } from "./middlewares/error.middleware";
 dotenv.config();
 
@@ -18,5 +19,6 @@ app.use("/auth", authRoutes);
 app.use("/user", userRoutes);
 app.use("/books", bookRoutes);
 app.use("/cart", cartRoutes);
+app.use("/order", orderRoutes);
 app.use(errorMiddleware);
 app.listen(PORT, () => console.log(`API running on ${PORT}`));

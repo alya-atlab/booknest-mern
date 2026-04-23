@@ -20,7 +20,7 @@ export const addToCart = async (req: Request, res: Response) => {
   }
   const bookId = new Types.ObjectId(bookIdInput);
   const cart = await addToCartService({ userId, bookId });
-  res.status(200).json({
+  res.status(201).json({
     success: true,
     data: cart,
   });
