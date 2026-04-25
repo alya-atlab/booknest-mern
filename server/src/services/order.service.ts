@@ -47,6 +47,8 @@ export const checkout = async (userId: Types.ObjectId) => {
       bookId,
       priceAtPurchase: price,
       quantity,
+      authorId: result.author,
+      title:result.title,
     });
   }
   const order = await orderModel.create({

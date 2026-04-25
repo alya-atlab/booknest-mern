@@ -5,6 +5,8 @@ interface IOrderItems {
   bookId: Types.ObjectId;
   priceAtPurchase: number;
   quantity: number;
+  authorId: Types.ObjectId;
+  title: string;
 }
 
 interface IOrder {
@@ -18,6 +20,8 @@ const orderItemSchema = new Schema<IOrderItems>({
   bookId: { type: Types.ObjectId, ref: "Book", required: true },
   priceAtPurchase: { type: Number, required: true, min: 0 },
   quantity: { type: Number, required: true, default: 1, min: 1 },
+  authorId: { type: Types.ObjectId, ref: "User", required: true },
+  title: { type: String, required: true },
 });
 
 const orderSchema = new Schema<IOrder>(
