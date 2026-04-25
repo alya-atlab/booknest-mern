@@ -19,16 +19,34 @@ export const checkout = async (userId: Types.ObjectId) => {
   let totalAmount = 0;
   for (const item of cart.items) {
     const bookId = item.bookId;
-    const book = await bookModel.findById(bookId);
-    if (!book) {
-      throw new ApiError("Book not found", 404);
+    const quantity = item.quantity;
+    const result = await bookModel.findOneAndUpdate(
+      {
+        _id: bookId,
+        stock: { $gte: quantity },
+      },
+      {
+        $inc: { stock: -quantity },
+      },
+      { new: true },
+    );
+    if (!result) {
+      const exists = await bookModel.exists({ _id: bookId });
+
+      if (!exists) {
+        throw new ApiError("Book not found", 404);
+      }
+
+      throw new ApiError(`Insufficient stock for requested quantity`, 400);
     }
-    const price = book.price;
-    totalAmount += price * item.quantity;
+
+    const price = result.price;
+
+    totalAmount += price * quantity;
     orderItems.push({
       bookId,
       priceAtPurchase: price,
-      quantity: item.quantity,
+      quantity,
     });
   }
   const order = await orderModel.create({

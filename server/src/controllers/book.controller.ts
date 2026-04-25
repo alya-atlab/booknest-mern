@@ -114,6 +114,7 @@ export const updateBook = async (req: Request<Params>, res: Response) => {
     "description",
     "price",
     "coverImage",
+    "stock"
   ];
   for (const key of allowedFields) {
     if (body[key] !== undefined) {

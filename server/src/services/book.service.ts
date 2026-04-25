@@ -9,12 +9,19 @@ interface BookInput {
   description: string;
   price: number;
   coverImage: string;
+  stock: number;
 }
 export const createBook = async (
-  { title, description, price, coverImage }: BookInput,
+  { title, description, price, coverImage, stock }: BookInput,
   author: Types.ObjectId,
 ) => {
-  if (!title || !description || price === undefined || !coverImage) {
+  if (
+    !title ||
+    !description ||
+    price === undefined ||
+    stock === undefined ||
+    !coverImage
+  ) {
     throw new ApiError("Missing required fields", 400);
   }
 
@@ -23,10 +30,12 @@ export const createBook = async (
     typeof description !== "string" ||
     typeof price !== "number" ||
     Number.isNaN(price) ||
+    typeof stock !== "number" ||
+    Number.isNaN(stock) ||
     typeof coverImage !== "string"
   ) {
     throw new ApiError(
-      "Title, description, and cover image must be strings, and price must be a valid number",
+      "Title, description, and cover image must be strings, stock and price must be a valid number",
       400,
     );
   }
@@ -39,6 +48,9 @@ export const createBook = async (
   if (price <= 0) {
     throw new ApiError("Invalid price", 400);
   }
+  if (price <= 0) {
+    throw new ApiError("Invalid stock", 400);
+  }
   const existingBook = await bookModel.findOne({ title: title, author });
   if (existingBook) {
     throw new ApiError("Book already exists", 400);
@@ -49,6 +61,7 @@ export const createBook = async (
     price,
     coverImage,
     author,
+    stock,
   });
   return createdBook;
 };
@@ -114,6 +127,7 @@ export interface BookUpdateInput {
   description?: string;
   price?: number;
   coverImage?: string;
+  stock?:number
 }
 export const updateBook = async (
   bookId: Types.ObjectId,
@@ -163,6 +177,15 @@ export const updateBook = async (
     }
 
     if (cleanData.price <= 0) {
+      throw new ApiError("Invalid price", 400);
+    }
+  }
+  if (cleanData.stock !== undefined) {
+    if (typeof cleanData.stock !== "number" || Number.isNaN(cleanData.stock)) {
+      throw new ApiError("Price must be a valid number", 400);
+    }
+
+    if (cleanData.stock <= 0) {
       throw new ApiError("Invalid price", 400);
     }
   }
