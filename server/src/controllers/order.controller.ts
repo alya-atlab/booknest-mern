@@ -5,6 +5,7 @@ import {
   getMyOrders as getMyOrdersService,
   getOrderById as getOrderByIdService,
   updateStatus as updateStatusService,
+  getOrdersForAuthor as getOrdersForAuthorService,
 } from "../services/order.service";
 import { Types } from "mongoose";
 import { ApiError } from "../utils/ApiError";
@@ -89,3 +90,17 @@ export const updateStatus = async (req: Request, res: Response) => {
     data: order,
   });
 };
+export const getOrdersForAuthor = async (req: Request, res: Response) => {
+  const user = req.user;
+  if (!user) throw new ApiError("Unauthorized", 401);
+   if (!Types.ObjectId.isValid(user._id)) {
+     throw new ApiError("Invalid Id", 400);
+   }
+  const userId = new Types.ObjectId(user._id);
+  const orders = await getOrdersForAuthorService(userId);
+    res.status(200).json({
+      success: true,
+      data: orders,
+    });
+ }
+  

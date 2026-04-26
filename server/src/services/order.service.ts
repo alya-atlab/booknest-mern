@@ -71,7 +71,6 @@ export const checkout = async (userId: Types.ObjectId) => {
     if (error instanceof ApiError) {
       throw error;
     }
-
     throw new ApiError("Cannot create order", 500);
   } finally {
     session.endSession();
@@ -144,4 +143,44 @@ export const updateStatus = async ({
   order.status = newStatus as any;
   await order.save();
   return order;
+};
+type Items = {
+  title: string;
+  price: number;
+  quantity: number;
+};
+export const getOrdersForAuthor = async (authorId: Types.ObjectId) => {
+  const orders = await orderModel
+    .find({ "items.authorId": authorId })
+    .sort({ createdAt: -1 })
+    .lean();
+  const stringifyAuthorId = authorId.toString();
+
+  let authorOrders = orders.map((order) => {
+    const items: Items[] = [];
+    let authorOrderTotal = 0;
+
+    for (let item of order.items) {
+      if (item.authorId.toString() === stringifyAuthorId) {
+        items.push({
+          title: item.title,
+          price: item.priceAtPurchase,
+          quantity: item.quantity,
+        });
+        authorOrderTotal += item.priceAtPurchase * item.quantity;
+      }
+    }
+    if (items.length === 0) {
+      return;
+    }
+    return {
+      items,
+      authorOrderTotal,
+      orderId: order._id.toString(),
+      createdAt: order.createdAt.toISOString(),
+      status: order.status,
+    };
+  });
+  authorOrders = authorOrders.filter(Boolean);
+  return authorOrders;
 };
