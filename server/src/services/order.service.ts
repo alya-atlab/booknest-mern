@@ -1,4 +1,4 @@
-import { Types } from "mongoose";
+import mongoose, { Types } from "mongoose";
 import { getCart } from "./cart.service";
 import { ApiError } from "../utils/ApiError";
 import orderModel from "../models/order.model";
@@ -10,55 +10,72 @@ import {
 } from "../constants/order.constants";
 
 export const checkout = async (userId: Types.ObjectId) => {
-  const cart = await getCart(userId);
-  if (cart.items.length === 0) {
-    throw new ApiError("Cart is empty", 400);
-  }
+  const session = await mongoose.startSession();
 
-  const orderItems = [];
-  let totalAmount = 0;
-  for (const item of cart.items) {
-    const bookId = item.bookId;
-    const quantity = item.quantity;
-    const result = await bookModel.findOneAndUpdate(
-      {
-        _id: bookId,
-        stock: { $gte: quantity },
-      },
-      {
-        $inc: { stock: -quantity },
-      },
-      { new: true },
-    );
-    if (!result) {
-      const exists = await bookModel.exists({ _id: bookId });
-
-      if (!exists) {
-        throw new ApiError("Book not found", 404);
+  try {
+    session.startTransaction();
+    const cart = await getCart(userId, session);
+    if (cart.items.length === 0) {
+      throw new ApiError("Cart is empty", 400);
+    }
+    const orderItems = [];
+    let totalAmount = 0;
+    for (const item of cart.items) {
+      const bookId = item.bookId;
+      const quantity = item.quantity;
+      if (!Number.isFinite(quantity) || quantity <= 0) {
+        throw new ApiError("Invalid quantity", 400);
+      }
+      const result = await bookModel.findOneAndUpdate(
+        {
+          _id: bookId,
+          stock: { $gte: quantity },
+        },
+        {
+          $inc: { stock: -quantity },
+        },
+        { new: true, session },
+      );
+      if (!result) {
+        throw new ApiError("Book not available or insufficient stock", 409);
       }
 
-      throw new ApiError(`Insufficient stock for requested quantity`, 400);
+      const price = result.price;
+
+      totalAmount += price * quantity;
+      orderItems.push({
+        bookId,
+        priceAtPurchase: price,
+        quantity,
+        authorId: result.author,
+        title: result.title,
+      });
+    }
+    const order = await orderModel.create(
+      [
+        {
+          userId,
+          items: orderItems,
+          totalAmount,
+        },
+      ],
+      { session },
+    );
+    cart.items = [];
+    await cart.save({ session });
+    await session.commitTransaction();
+    return order[0];
+  } catch (error) {
+    await session.abortTransaction();
+    console.log(error);
+    if (error instanceof ApiError) {
+      throw error;
     }
 
-    const price = result.price;
-
-    totalAmount += price * quantity;
-    orderItems.push({
-      bookId,
-      priceAtPurchase: price,
-      quantity,
-      authorId: result.author,
-      title:result.title,
-    });
+    throw new ApiError("Cannot create order", 500);
+  } finally {
+    session.endSession();
   }
-  const order = await orderModel.create({
-    userId,
-    items: orderItems,
-    totalAmount,
-  });
-  cart.items = [];
-  await cart.save();
-  return order;
 };
 
 export const getOrders = async () => {

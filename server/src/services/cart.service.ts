@@ -1,17 +1,25 @@
-import { Types } from "mongoose";
+import { ClientSession, Types } from "mongoose";
 import cartModel from "../models/cart.model";
 import bookModel from "../models/books.model";
 import { ApiError } from "../utils/ApiError";
 
-const createNewCart = async (userId: Types.ObjectId) => {
-  const cart = await cartModel.create({ userId });
+const createNewCart = async (
+  userId: Types.ObjectId,
+  session?: ClientSession,
+) => {
+  const cart = await cartModel.create([{ userId }], {
+    session: session ?? null,
+  });
 
-  return cart;
+  return cart[0];
 };
-export const getCart = async (userId: Types.ObjectId) => {
-  let cart = await cartModel.findOne({ userId });
+export const getCart = async (
+  userId: Types.ObjectId,
+  session?: ClientSession,
+) => {
+  let cart = await cartModel.findOne({ userId }).session(session ?? null);
   if (!cart) {
-    const newCart = await createNewCart(userId);
+    const newCart = await createNewCart(userId, session);
     return newCart;
   }
   return cart;
