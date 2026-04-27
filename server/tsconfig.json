@@ -9,9 +9,10 @@
     "strict": true,
     "skipLibCheck": true,
     "verbatimModuleSyntax": false,
-    "isolatedModules": false,
+    "isolatedModules": true,
     "moduleDetection": "auto",
-    "types": ["node"],
+    "types": ["node", "jest"],
+    
   },
   "include": ["src"]
 }
