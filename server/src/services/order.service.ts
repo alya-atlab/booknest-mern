@@ -67,7 +67,7 @@ export const checkout = async (userId: Types.ObjectId) => {
     return order[0];
   } catch (error) {
     await session.abortTransaction();
-    console.log(error);
+
     if (error instanceof ApiError) {
       throw error;
     }
