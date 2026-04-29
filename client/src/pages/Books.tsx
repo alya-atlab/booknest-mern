@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import api from "../api/axios";
 import type { Book } from "../types/book";
 import axios from "axios";
-import { Box, Container, Typography } from "@mui/material";
+import { Box, Container, Grid, Skeleton, Typography } from "@mui/material";
+import BookCard from "../components/books/BookCard";
 
 const Books = () => {
   const [books, setBooks] = useState<Book[]>([]);
@@ -29,29 +30,71 @@ const Books = () => {
     };
     getBooks();
   }, []);
+  const onAddToCart = (bookId: string) => {
+    console.log(bookId);
+  };
+  const onOpenDetails = (bookId: string) => {
+   console.log(bookId);
+  };
+
   if (loading) {
-    return <Container>loading...</Container>;
+    return (
+      <Grid container spacing={2}>
+        {Array.from({ length: 8 }).map((_, i) => (
+          <Grid key={`sk-${i}`} size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+            <Box sx={{ height: "100%" }}>
+              <Skeleton variant="rectangular" height={220} />
+              <Box sx={{ p: 2 }}>
+                <Skeleton width="80%" />
+                <Skeleton width="60%" />
+                <Skeleton width="40%" />
+                <Box
+                  sx={{
+                    mt: 2,
+                    display: "flex",
+                    justifyContent: "space-between",
+                  }}
+                >
+                  <Skeleton width={60} />
+                  <Skeleton width={80} />
+                </Box>
+              </Box>
+            </Box>
+          </Grid>
+        ))}
+      </Grid>
+    );
   }
-  if (error) {
-    return <Container>{error}</Container>;
-  }
-  if (books.length === 0) {
-    return <Container>No books found</Container>;
-  }
+ if (error) {
+   return (
+     <Container sx={{ mt: 10, textAlign: "center" }}>
+       <Typography variant="h6" color="error">
+         {error}
+       </Typography>
+     </Container>
+   );
+ }
+ if (books.length === 0) {
+   return (
+     <Container sx={{ mt: 10, textAlign: "center" }}>
+       <Typography variant="h6">No books found</Typography>
+     </Container>
+   );
+ }
 
   return (
-    <Container sx={{ textAlign: "center" }}>
-      <Typography variant="h4" sx={{ fontWeight: "bold" }}>
-        Books
-      </Typography>
-      {books.map((book) => {
-        return (
-          <Box key={book._id} sx={{ mb: 2 }}>
-            <Typography> {book.title}</Typography>
-            <Typography> {book.price}</Typography>
-          </Box>
-        );
-      })}
+    <Container sx={{ py: 4, marginTop: 8 }}>
+      <Grid container spacing={2}>
+        {books.map((book) => (
+          <Grid key={book._id} size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+            <BookCard
+              book={book}
+              onAddToCart={onAddToCart}
+              onOpenDetails={onOpenDetails}
+            />
+          </Grid>
+        ))}
+      </Grid>
     </Container>
   );
 };

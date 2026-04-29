@@ -77,13 +77,13 @@ export const getBooks = async (
     .find(filter)
     .skip(skip)
     .limit(limit)
-    .populate("author", "firstName lastName email");
+    .populate("author", "firstName lastName");
 };
 
 export const getBookByID = async (id: Types.ObjectId) => {
   const book = await bookModel
     .findById(id)
-    .populate("author", "firstName lastName email");
+    .populate("author", "firstName lastName");
   if (!book) {
     throw new ApiError("Book Not Found", 404);
   }
