@@ -15,6 +15,11 @@ import { Link as RouterLink } from "react-router-dom";
 
 import type { LoginForm } from "../types/loginForm";
 
+import api from "../api/axios";
+
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+
 const inputStyles = {
   m: 1,
   width: "35ch",
@@ -38,6 +43,8 @@ const inputStyles = {
 };
 
 const LoginPage = () => {
+  const navigate = useNavigate();
+
   const [showPassword, setShowPassword] = React.useState(false);
 
   const [form, setForm] = useState<LoginForm>({
@@ -86,15 +93,29 @@ const LoginPage = () => {
 
       return;
     }
+    try {
+      const res = await api.post("/auth/login", {
+        email: form.email,
+        password: form.password,
+      });
+      localStorage.setItem("token", res.data.data.token);
 
-    setErrors({});
+      navigate("/", { replace: true });
+      setErrors({});
 
-    console.log(form);
-
-    setForm({
-      email: "",
-      password: "",
-    });
+      setForm({
+        email: "",
+        password: "",
+      });
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        setErrors({ general: error.response?.data?.message });
+      } else {
+        setErrors({
+          general: "Something went wrong",
+        });
+      }
+    }
   };
 
   return (

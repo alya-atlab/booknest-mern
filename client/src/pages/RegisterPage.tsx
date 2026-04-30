@@ -4,7 +4,7 @@ import {
   Container,
   FormHelperText,
   Typography,
-  Link
+  Link,
 } from "@mui/material";
 import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
@@ -16,7 +16,12 @@ import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import React, { useState } from "react";
 import type { RegisterForm } from "../types/registerForm";
 import { ErrorOutlined } from "@mui/icons-material";
-import {Link as RouterLink } from "react-router-dom";
+import { Link as RouterLink } from "react-router-dom";
+import api from "../api/axios";
+
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+
 const inputStyles = {
   m: 1,
   width: "35ch",
@@ -36,6 +41,8 @@ const inputStyles = {
 };
 
 const RegisterPage = () => {
+  const navigate = useNavigate();
+
   const [showPassword, setShowPassword] = React.useState(false);
 
   const [form, setForm] = useState<RegisterForm>({
@@ -141,16 +148,31 @@ const RegisterPage = () => {
     }
 
     setErrors({});
-
-    console.log(form);
-
-    setForm({
-      firstName: "",
-      lastName: "",
-      email: "",
-      password: "",
-      confirmPassword: "",
-    });
+    try {
+      const res = await api.post("/auth/register", {
+        firstName: form.firstName,
+        lastName: form.lastName,
+        email: form.email,
+        password: form.password,
+      });
+      localStorage.setItem("token", res.data.data.token);
+      navigate("/", { replace: true });
+      setForm({
+        firstName: "",
+        lastName: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+      });
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        setErrors({ general: error.response?.data?.message });
+      } else {
+        setErrors({
+          general: "Something went wrong",
+        });
+      }
+    }
   };
 
   return (

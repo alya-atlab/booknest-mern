@@ -5,6 +5,7 @@ import axios from "axios";
 import { Box, Container, Grid, Skeleton, Typography } from "@mui/material";
 import BookCard from "../components/books/BookCard";
 
+
 const Books = () => {
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(true);
@@ -30,11 +31,18 @@ const Books = () => {
     };
     getBooks();
   }, []);
-  const onAddToCart = (bookId: string) => {
-    console.log(bookId);
+  const onAddToCart = async (bookId: string) => {
+    try {
+       await api.post("/cart", {
+        bookId,
+      });
+    } catch (error) {
+      console.error(error);
+    }
+
   };
   const onOpenDetails = (bookId: string) => {
-   console.log(bookId);
+    console.log(bookId);
   };
 
   if (loading) {
@@ -65,22 +73,22 @@ const Books = () => {
       </Grid>
     );
   }
- if (error) {
-   return (
-     <Container sx={{ mt: 10, textAlign: "center" }}>
-       <Typography variant="h6" color="error">
-         {error}
-       </Typography>
-     </Container>
-   );
- }
- if (books.length === 0) {
-   return (
-     <Container sx={{ mt: 10, textAlign: "center" }}>
-       <Typography variant="h6">No books found</Typography>
-     </Container>
-   );
- }
+  if (error) {
+    return (
+      <Container sx={{ mt: 10, textAlign: "center" }}>
+        <Typography variant="h6" color="error">
+          {error}
+        </Typography>
+      </Container>
+    );
+  }
+  if (books.length === 0) {
+    return (
+      <Container sx={{ mt: 10, textAlign: "center" }}>
+        <Typography variant="h6">No books found</Typography>
+      </Container>
+    );
+  }
 
   return (
     <Container sx={{ py: 4, marginTop: 8 }}>
