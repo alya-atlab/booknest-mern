@@ -13,7 +13,7 @@ import InputAdornment from "@mui/material/InputAdornment";
 import IconButton from "@mui/material/IconButton";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import type { RegisterForm } from "../types/registerForm";
 import { ErrorOutlined } from "@mui/icons-material";
 import { Link as RouterLink } from "react-router-dom";
@@ -59,6 +59,11 @@ const RegisterPage = () => {
     password?: string;
     general?: string;
   }>({});
+  useEffect(() => {
+    if (localStorage.getItem("token")) {
+      navigate("/", { replace: true });
+    }
+  }, [navigate]);
 
   const handleClickShowPassword = () => setShowPassword((show) => !show);
 

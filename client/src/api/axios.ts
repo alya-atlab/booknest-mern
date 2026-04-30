@@ -11,4 +11,20 @@ instance.interceptors.request.use((config) => {
   }
   return config;
 });
+instance.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  (error) => {
+    const status = error.response?.status;
+
+    if (status === 401) {
+      localStorage.removeItem("token");
+      window.location.href = "/";
+    }
+
+   return Promise.reject(error);
+  },
+);
+
 export default instance;

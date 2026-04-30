@@ -26,7 +26,7 @@ const protect = (req: Request, res: Response, next: NextFunction) => {
     req.user = { _id: userPayload.userId, role: userPayload.role };
     next();
   } catch {
-    return next(new ApiError("Invalid Token", 403));
+    return next(new ApiError("Invalid Token", 401));
   }
 };
 export default protect;

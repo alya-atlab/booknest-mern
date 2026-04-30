@@ -10,7 +10,7 @@ import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import { ErrorOutlined } from "@mui/icons-material";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link as RouterLink } from "react-router-dom";
 
 import type { LoginForm } from "../types/loginForm";
@@ -55,6 +55,12 @@ const LoginPage = () => {
   const [errors, setErrors] = useState<{
     general?: string;
   }>({});
+
+  useEffect(() => {
+    if (localStorage.getItem("token")) {
+      navigate("/", { replace: true });
+    }
+  }, [navigate]);
 
   const handleClickShowPassword = () => setShowPassword((show) => !show);
 

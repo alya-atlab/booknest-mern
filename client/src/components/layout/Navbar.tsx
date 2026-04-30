@@ -11,7 +11,16 @@ import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 
 import { Link } from "react-router-dom";
 
+import { useNavigate } from "react-router-dom";
+
 function NavBar() {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    navigate("/login", { replace: true });
+  };
+
   return (
     <AppBar
       position="static"
@@ -50,18 +59,26 @@ function NavBar() {
             <Button component={Link} to="/" color="inherit">
               Books
             </Button>
-
-            <Button component={Link} to="/login" color="inherit">
-              Login
-            </Button>
-
-            <Button component={Link} to="/register" color="inherit">
-              Register
-            </Button>
-
-            <IconButton component={Link} to="/cart">
-              <ShoppingCartIcon sx={{ color: "#000000be" }} />
-            </IconButton>
+            {localStorage.getItem("token") ? (
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Button sx={{ color: "#000000be" }} onClick={handleLogout}>
+                  Logout
+                </Button>
+                <IconButton component={Link} to="/cart">
+                  <ShoppingCartIcon sx={{ color: "#000000be" }} />
+                </IconButton>
+              </Box>
+            ) : (
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                {" "}
+                <Button component={Link} to="/login" color="inherit">
+                  Login
+                </Button>
+                <Button component={Link} to="/register" color="inherit">
+                  Register
+                </Button>
+              </Box>
+            )}
           </Box>
         </Toolbar>
       </Container>
