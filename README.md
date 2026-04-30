@@ -1,49 +1,118 @@
 # BookNest
 
-Full-stack MERN e-commerce platform for books with role-based access control (user, author, admin).
+Full-stack MERN bookstore and e-commerce platform built with React, TypeScript, Node.js, Express, and MongoDB.
 
----
-
-## Overview
-
-BookNest is a full-stack application that demonstrates a complete e-commerce workflow using the MERN stack.
-
-The backend is built with a clean and structured approach, including:
-
-- JWT-based authentication
-- Role-based authorization (user / author / admin)
-- Separation of concerns (controllers / services)
-- Input validation and centralized error handling
+The project includes JWT authentication, role-based access control, cart and checkout workflows, inventory management, and order processing.
 
 ---
 
 ## Features
 
+### Authentication & Authorization
+
 - JWT authentication
+- User registration and login
+- Protected routes
 - Role-based access control (user / author / admin)
-- Books catalog browsing
-- Book management (author/admin)
-- User management (admin / user)
-- Input validation and error handling
+- Persistent authentication using JWT
+- Axios interceptor for authenticated requests
+
+---
+
+### Books
+
+- Browse books catalog
+- Pagination and filtering
+- Get single book details
+- Create books (author/admin)
+- Update books with ownership validation
+- Delete books with authorization checks
+- Populate author information
+
+---
+
+### Cart
+
+- Add books to cart
+- Update cart items
+- Remove cart items
+- Protected cart routes
+- Cart CRUD operations
+
+---
+
+### Orders & Checkout
+
+- Checkout workflow
+- Order creation
+- Order retrieval with role-based access
+- Order status updates
+- Status transition validation
+- Snapshot data integrity for ordered items
+
+---
+
+### Inventory
+
+- Stock management
+- Inventory validation
+- Atomic stock updates
+- Overselling prevention
+
+---
+
+### Frontend
+
+- React + TypeScript frontend
+- Login and register pages
+- Reusable book card components
+- Auth-aware navbar
+- Loading and error handling states
+- API integration using Axios
+
+---
+
+### Testing
+
+- Jest integration testing
+- Checkout success tests
+- Checkout failure scenarios
+- Access control tests
+- Order status validation tests
+- Transaction and inventory consistency tests
 
 ---
 
 ## Tech Stack
 
-- MongoDB
-- Express.js
-- React + TypeScript (Vite)
+### Frontend
+
+- React
+- TypeScript
+- Vite
+- Axios
+- Material UI
+
+### Backend
+
 - Node.js
+- Express.js
+- MongoDB
 - Mongoose
-- JWT Authentication
+- JWT
+- bcrypt
+
+### Testing
+
+- Jest
 
 ---
 
 ## Project Structure
 
-```
+```txt
 client/   → React frontend
-server/   → Express + MongoDB backend
+server/   → Express backend and MongoDB logic
 ```
 
 ---
@@ -52,66 +121,75 @@ server/   → Express + MongoDB backend
 
 ### Auth
 
-- POST /api/auth/register
-- POST /api/auth/login
-
----
+```txt
+POST /auth/register
+POST /auth/login
+```
 
 ### Users
 
-- GET /api/users
-  → Admin only
-
-- GET /api/users/:id
-  → Admin or the user themselves
-
-- PUT /api/users/:id
-  → Admin or the user themselves
-
----
+```txt
+GET /users
+GET /users/:id
+PUT /users/:id
+```
 
 ### Books
 
-- GET /api/books
+```txt
+GET /books
+GET /books/:id
+POST /books
+PUT /books/:id
+DELETE /books/:id
+```
 
-- POST /api/books
-  → Author or Admin
+### Cart
 
-- PUT /api/books/:id
-  → Author (owner) or Admin
+```txt
+GET /cart
+POST /cart
+PUT /cart/:bookId
+DELETE /cart/:bookId
+```
 
-- DELETE /api/books/:id
-  → Author (owner) or Admin
+### Orders
+
+```txt
+POST /orders/checkout
+GET /orders
+GET /orders/:id
+PATCH /orders/:id/status
+```
 
 ---
 
 ## Authentication
 
-All protected routes require a JWT token.
+Protected routes require a JWT token.
 
-Include the token in the request headers:
+Example:
 
-```
-Authorization: Bearer <your_token>
+```txt
+Authorization: Bearer <token>
 ```
 
 ---
 
-## Example Request
+## Environment Variables
 
-### Update User
+### Backend (`server/.env`)
 
+```env
+PORT=5000
+MONGO_URI=your_mongodb_connection
+JWT_SECRET=your_jwt_secret
 ```
-PUT /api/users/:id
-```
 
-Body:
+### Frontend (`client/.env`)
 
-```
-{
-  "firstName": "Alya",
-  "email": "alya@example.com"
-}
+```env
+VITE_API_BASE_URL=http://localhost:5000
 ```
 
 ---
@@ -120,18 +198,50 @@ Body:
 
 ### Backend
 
-```
+```bash
 cd server
+npm install
+npm run dev
+```
+
+### Frontend
+
+```bash
+cd client
 npm install
 npm run dev
 ```
 
 ---
 
-### Frontend
+## Architecture Notes
 
-```
-cd client
-npm install
-npm run dev
-```
+- Controller/service separation
+- Centralized error handling with custom ApiError middleware
+- JWT middleware for route protection
+- Validation and authorization layers
+- Reusable Axios instance with request interceptor
+- Atomic inventory updates for stock consistency
+
+---
+
+## What I Learned
+
+- Building JWT authentication and authorization flows
+- Designing REST APIs with role-based access control
+- Handling ownership validation and protected resources
+- Managing inventory consistency during checkout
+- Writing backend integration tests with Jest
+- Structuring Express applications with separated layers
+
+---
+
+## Future Improvements
+
+- Payment gateway integration
+- Admin dashboard
+- Search and sorting
+- Book reviews and ratings
+- Docker support
+- CI/CD pipeline
+- Redis caching
