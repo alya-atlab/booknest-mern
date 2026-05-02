@@ -2,7 +2,16 @@ import { useEffect, useState } from "react";
 import api from "../api/axios";
 import type { Book } from "../types/book";
 import axios from "axios";
-import { Box, Container, Grid, Skeleton, Typography } from "@mui/material";
+import {
+  Alert,
+  Box,
+  Container,
+  Grid,
+  Skeleton,
+  Snackbar,
+  Typography,
+  type SnackbarCloseReason,
+} from "@mui/material";
 import BookCard from "../components/books/BookCard";
 import { useNavigate } from "react-router-dom";
 
@@ -10,8 +19,10 @@ const Books = () => {
   const navigate = useNavigate();
 
   const [books, setBooks] = useState<Book[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string>("");
+  const [open, setOpen] = useState<boolean>(false);
+  const snackbarMessage = "Book added to cart";
 
   useEffect(() => {
     const getBooks = async () => {
@@ -42,12 +53,22 @@ const Books = () => {
       await api.post("/cart", {
         bookId,
       });
+      setOpen(true);
     } catch (error) {
       console.error(error);
     }
   };
   const onOpenDetails = (bookId: string) => {
     console.log(bookId);
+  };
+  const handleClose = (
+    event?: React.SyntheticEvent | Event,
+    reason?: SnackbarCloseReason,
+  ) => {
+    if (reason === "clickaway") {
+      return;
+    }
+    setOpen(false);
   };
 
   if (loading) {
@@ -108,6 +129,16 @@ const Books = () => {
           </Grid>
         ))}
       </Grid>
+      <Snackbar open={open} autoHideDuration={6000} onClose={handleClose}>
+        <Alert
+          onClose={handleClose}
+          severity="success"
+          variant="filled"
+          sx={{ width: "100%" }}
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </Container>
   );
 };

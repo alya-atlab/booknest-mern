@@ -1,4 +1,11 @@
-import { Box, Button, Container, Link, Typography } from "@mui/material";
+import {
+  Box,
+  Button,
+  CircularProgress,
+  Container,
+  Link,
+  Typography,
+} from "@mui/material";
 
 import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
@@ -46,6 +53,7 @@ const LoginPage = () => {
   const navigate = useNavigate();
 
   const [showPassword, setShowPassword] = React.useState(false);
+  const [loading, setLoading] = useState<boolean>(false);
 
   const [form, setForm] = useState<LoginForm>({
     email: "",
@@ -100,6 +108,8 @@ const LoginPage = () => {
       return;
     }
     try {
+      setLoading(true);
+
       const res = await api.post("/auth/login", {
         email: form.email,
         password: form.password,
@@ -121,6 +131,8 @@ const LoginPage = () => {
           general: "Something went wrong",
         });
       }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -208,8 +220,27 @@ const LoginPage = () => {
               borderWidth: 2,
             },
           }}
+          disabled={loading}
         >
-          Sign In
+          {loading ? (
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 1,
+              }}
+            >
+              Logging in...
+              <CircularProgress
+                aria-label="Loading…"
+                size="30px"
+                color="inherit"
+              />
+            </Box>
+          ) : (
+            "Sign In"
+          )}
         </Button>
 
         {errors.general && (

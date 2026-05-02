@@ -5,6 +5,7 @@ import {
   FormHelperText,
   Typography,
   Link,
+  CircularProgress,
 } from "@mui/material";
 import FormControl from "@mui/material/FormControl";
 import InputLabel from "@mui/material/InputLabel";
@@ -44,6 +45,7 @@ const RegisterPage = () => {
   const navigate = useNavigate();
 
   const [showPassword, setShowPassword] = React.useState(false);
+  const [loading, setLoading] = useState<boolean>(false);
 
   const [form, setForm] = useState<RegisterForm>({
     firstName: "",
@@ -154,6 +156,7 @@ const RegisterPage = () => {
 
     setErrors({});
     try {
+      setLoading(true);
       const res = await api.post("/auth/register", {
         firstName: form.firstName,
         lastName: form.lastName,
@@ -177,6 +180,8 @@ const RegisterPage = () => {
           general: "Something went wrong",
         });
       }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -322,17 +327,38 @@ const RegisterPage = () => {
             borderColor: "#999",
             color: "#345",
             borderRadius: 2,
+
             "&:hover": {
               borderColor: "#333",
               backgroundColor: "transparent",
             },
+
             "&.Mui-focusVisible": {
               borderColor: "#000",
               borderWidth: 2,
             },
           }}
+          disabled={loading}
         >
-          Sign Up
+          {loading ? (
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: 1,
+              }}
+            >
+              Logging in...
+              <CircularProgress
+                aria-label="Loading…"
+                size="30px"
+                color="inherit"
+              />
+            </Box>
+          ) : (
+            "Sign Up"
+          )}
         </Button>
 
         {errors.general && (
