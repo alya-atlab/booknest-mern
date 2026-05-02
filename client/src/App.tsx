@@ -5,6 +5,8 @@ import NavBar from "./components/layout/Navbar";
 import Books from "./pages/Books";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
+import CartPage from "./pages/CartPage";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
 
 function App() {
   const location = useLocation();
@@ -20,6 +22,14 @@ function App() {
         <Route path="/" element={<Books />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route
+          path="/cart"
+          element={
+            <ProtectedRoute>
+              <CartPage />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
     </>
   );

@@ -4,9 +4,11 @@ import type { Book } from "../types/book";
 import axios from "axios";
 import { Box, Container, Grid, Skeleton, Typography } from "@mui/material";
 import BookCard from "../components/books/BookCard";
-
+import { useNavigate } from "react-router-dom";
 
 const Books = () => {
+  const navigate = useNavigate();
+
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -32,14 +34,17 @@ const Books = () => {
     getBooks();
   }, []);
   const onAddToCart = async (bookId: string) => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      return navigate("/login", { replace: true });
+    }
     try {
-       await api.post("/cart", {
+      await api.post("/cart", {
         bookId,
       });
     } catch (error) {
       console.error(error);
     }
-
   };
   const onOpenDetails = (bookId: string) => {
     console.log(bookId);
