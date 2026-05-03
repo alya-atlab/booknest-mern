@@ -17,7 +17,10 @@ export const getCart = async (
   userId: Types.ObjectId,
   session?: ClientSession,
 ) => {
-  let cart = await cartModel.findOne({ userId }).session(session ?? null);
+  let cart = await cartModel
+    .findOne({ userId })
+    .session(session ?? null)
+    .populate("items.bookId", "title price author coverImage");
   if (!cart) {
     const newCart = await createNewCart(userId, session);
     return newCart;
