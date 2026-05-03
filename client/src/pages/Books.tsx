@@ -14,10 +14,12 @@ import {
 } from "@mui/material";
 import BookCard from "../components/books/BookCard";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/Auth/AuthContext";
+
 
 const Books = () => {
   const navigate = useNavigate();
-
+  const { isAuthenticated } = useAuth();
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
@@ -45,8 +47,8 @@ const Books = () => {
     getBooks();
   }, []);
   const onAddToCart = async (bookId: string) => {
-    const token = localStorage.getItem("token");
-    if (!token) {
+    
+    if (!isAuthenticated) {
       return navigate("/login", { replace: true });
     }
     try {

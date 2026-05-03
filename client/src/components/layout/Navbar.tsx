@@ -12,12 +12,14 @@ import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import { Link } from "react-router-dom";
 
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/Auth/AuthContext";
 
 function NavBar() {
   const navigate = useNavigate();
+  const { isAuthenticated, logout } = useAuth();
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
+    logout();
     navigate("/login", { replace: true });
   };
 
@@ -59,7 +61,7 @@ function NavBar() {
             <Button component={Link} to="/" color="inherit">
               Books
             </Button>
-            {localStorage.getItem("token") ? (
+            {isAuthenticated ? (
               <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 <Button sx={{ color: "#000000be" }} onClick={handleLogout}>
                   Logout

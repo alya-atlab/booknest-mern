@@ -14,11 +14,12 @@ import InputAdornment from "@mui/material/InputAdornment";
 import IconButton from "@mui/material/IconButton";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import type { RegisterForm } from "../types/registerForm";
 import { ErrorOutlined } from "@mui/icons-material";
 import { Link as RouterLink } from "react-router-dom";
 import api from "../api/axios";
+import { useAuth } from "../context/Auth/AuthContext";
 
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
@@ -43,7 +44,7 @@ const inputStyles = {
 
 const RegisterPage = () => {
   const navigate = useNavigate();
-
+  const { login } = useAuth();
   const [showPassword, setShowPassword] = React.useState(false);
   const [loading, setLoading] = useState<boolean>(false);
 
@@ -61,11 +62,6 @@ const RegisterPage = () => {
     password?: string;
     general?: string;
   }>({});
-  useEffect(() => {
-    if (localStorage.getItem("token")) {
-      navigate("/", { replace: true });
-    }
-  }, [navigate]);
 
   const handleClickShowPassword = () => setShowPassword((show) => !show);
 
@@ -163,7 +159,7 @@ const RegisterPage = () => {
         email: form.email,
         password: form.password,
       });
-      localStorage.setItem("token", res.data.data.token);
+      login(res.data.data.token);
       navigate("/", { replace: true });
       setForm({
         firstName: "",

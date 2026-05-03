@@ -17,7 +17,7 @@ import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import { ErrorOutlined } from "@mui/icons-material";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Link as RouterLink } from "react-router-dom";
 
 import type { LoginForm } from "../types/loginForm";
@@ -25,6 +25,9 @@ import type { LoginForm } from "../types/loginForm";
 import api from "../api/axios";
 
 import { useNavigate } from "react-router-dom";
+
+import { useAuth } from "../context/Auth/AuthContext";
+
 import axios from "axios";
 
 const inputStyles = {
@@ -51,6 +54,7 @@ const inputStyles = {
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const [showPassword, setShowPassword] = React.useState(false);
   const [loading, setLoading] = useState<boolean>(false);
@@ -63,12 +67,6 @@ const LoginPage = () => {
   const [errors, setErrors] = useState<{
     general?: string;
   }>({});
-
-  useEffect(() => {
-    if (localStorage.getItem("token")) {
-      navigate("/", { replace: true });
-    }
-  }, [navigate]);
 
   const handleClickShowPassword = () => setShowPassword((show) => !show);
 
@@ -114,7 +112,7 @@ const LoginPage = () => {
         email: form.email,
         password: form.password,
       });
-      localStorage.setItem("token", res.data.data.token);
+      login(res.data.data.token);
 
       navigate("/", { replace: true });
       setErrors({});
