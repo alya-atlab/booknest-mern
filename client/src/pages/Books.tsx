@@ -16,7 +16,6 @@ import BookCard from "../components/books/BookCard";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/Auth/AuthContext";
 
-
 const Books = () => {
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
@@ -47,7 +46,6 @@ const Books = () => {
     getBooks();
   }, []);
   const onAddToCart = async (bookId: string) => {
-    
     if (!isAuthenticated) {
       return navigate("/login", { replace: true });
     }
@@ -64,7 +62,7 @@ const Books = () => {
     console.log(bookId);
   };
   const handleClose = (
-    event?: React.SyntheticEvent | Event,
+    _event?: React.SyntheticEvent | Event,
     reason?: SnackbarCloseReason,
   ) => {
     if (reason === "clickaway") {

@@ -69,6 +69,16 @@ export const updateItem = async ({
     await cart.save();
     return cart;
   }
+  const book = await bookModel.findById(bookId, { stock: 1 });
+  if (!book) {
+    throw new ApiError("Book not found", 404);
+  }
+  if (book.stock === 0) {
+    throw new ApiError("Out of stock", 400);
+  }
+  if (quantity > book.stock) {
+    throw new ApiError("Requested quantity exceeds available stock", 400);
+  }
   item.quantity = quantity;
   await cart.save();
   return cart;

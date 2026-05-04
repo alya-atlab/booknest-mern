@@ -4,18 +4,30 @@ import api from "../api/axios";
 import axios from "axios";
 import {
   Box,
+  Button,
   Card,
   CardContent,
   CardMedia,
+  CircularProgress,
   Container,
+  IconButton,
   Skeleton,
+  Snackbar,
   Typography,
+  type SnackbarCloseReason,
 } from "@mui/material";
+import { AddCircle, Delete, RemoveCircle } from "@mui/icons-material";
 
 const CartPage = () => {
   const [cart, setCart] = useState<Cart | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [loadingItemId, setLoadingItemId] = useState<string | null>(null);
+  const [loadingAction, setLoadingAction] = useState<
+    "increment" | "decrement" | "remove" | null
+  >(null);
   const [error, setError] = useState<string>("");
+  const [open, setOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
 
   useEffect(() => {
     const getCart = async () => {
@@ -37,6 +49,61 @@ const CartPage = () => {
     };
     getCart();
   }, []);
+
+  const handleChangeQuantity = async (
+    bookId: string,
+    newQuantity: number,
+    action: "increment" | "decrement",
+  ) => {
+    if (newQuantity < 0) {
+      return;
+    }
+    try {
+      setLoadingItemId(bookId);
+      setLoadingAction(action);
+      const res = await api.put(`/cart/${bookId}`, {
+        quantity: newQuantity,
+      });
+      setCart(res.data.data);
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.log(error.response?.data);
+        setSnackbarMessage(error.response?.data.message);
+
+        handleClick();
+      }
+    } finally {
+      setLoadingItemId(null);
+      setLoadingAction(null);
+    }
+  };
+  const handleRemove = async (bookId: string) => {
+    try {
+      setLoadingItemId(bookId);
+      setLoadingAction("remove");
+      const res = await api.delete(`/cart/${bookId}`, {});
+      setCart(res.data.data);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoadingItemId(null);
+      setLoadingAction(null);
+    }
+  };
+  const handleClick = () => {
+    setOpen(true);
+  };
+
+  const handleClose = (
+    _event: React.SyntheticEvent | Event,
+    reason?: SnackbarCloseReason,
+  ) => {
+    if (reason === "clickaway") {
+      return;
+    }
+
+    setOpen(false);
+  };
   if (loading) {
     return (
       <Container
@@ -114,22 +181,22 @@ const CartPage = () => {
           flexDirection: "column",
           alignItems: "center",
           borderRadius: 2,
-          p: 6,
-          boxShadow: 5,
+          p: 4,
+          boxShadow: 3,
         }}
       >
         {cart.items.map((item) => (
           <Box
             key={item._id}
             sx={{
-              width: "90%",
+              width: "95%",
               mt: 1,
               display: "flex",
               justifyContent: "space-between",
               alignItems: "center",
               borderRadius: 2,
-              p: 3,
-              boxShadow: 5,
+              p: 1,
+              boxShadow: 3,
             }}
           >
             <Box
@@ -156,17 +223,115 @@ const CartPage = () => {
                 }}
               />
               <CardContent>
-                <Typography variant="subtitle1" noWrap>
+                <Typography variant="subtitle1" sx={{ fontWeight: 700 }} noWrap>
                   {item.bookId.title}
                 </Typography>
-                <Typography variant="subtitle1" color="#5b5a5a">
+                <Typography variant="subtitle2" color="#5b5a5a">
                   ${item.bookId.price.toFixed(2)}
                 </Typography>
               </CardContent>
             </Box>
+            <Box
+              sx={{
+                color: "#343232",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                boxShadow: 1,
+                borderRadius: 2,
+              }}
+            >
+              <Button
+                onClick={() => {
+                  handleChangeQuantity(
+                    item.bookId._id,
+                    item.quantity + 1,
+                    "increment",
+                  );
+                }}
+                disabled={loadingItemId === item.bookId._id}
+              >
+                {loadingItemId === item.bookId._id &&
+                loadingAction === "increment" ? (
+                  <CircularProgress
+                    aria-label="Loading…"
+                    size={16}
+                    color="inherit"
+                  />
+                ) : (
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                  >
+                    <AddCircle fontSize="small" sx={{ color: "#343232" }} />
+                  </Box>
+                )}
+              </Button>
+              <Typography sx={{ fontSize: 20 }}>{item.quantity}</Typography>
+              <Button
+                onClick={() => {
+                  handleChangeQuantity(
+                    item.bookId._id,
+                    item.quantity - 1,
+                    "decrement",
+                  );
+                }}
+                disabled={loadingItemId === item.bookId._id}
+              >
+                {loadingItemId === item.bookId._id &&
+                loadingAction === "decrement" ? (
+                  <CircularProgress
+                    aria-label="Loading…"
+                    size={16}
+                    color="inherit"
+                  />
+                ) : (
+                  <RemoveCircle fontSize="small" sx={{ color: "#343232" }} />
+                )}
+              </Button>
+            </Box>
+            <Box
+              sx={{
+                color: "#343232",
+                display: "flex",
+                gap: 2,
+                justifyContent: "center",
+                alignItems: "center",
+              }}
+            >
+              <Typography sx={{ fontSize: 20, fontWeight: 600 }}>
+                ${(item.quantity * item.bookId.price).toFixed(2)}
+              </Typography>
+              {loadingItemId === item.bookId._id &&
+              loadingAction === "remove" ? (
+                <CircularProgress
+                  aria-label="Loading…"
+                  size={16}
+                  color="inherit"
+                />
+              ) : (
+                <IconButton
+                  onClick={() => {
+                    handleRemove(item.bookId._id);
+                  }}
+                  disabled={loadingItemId === item.bookId._id}
+                >
+                  <Delete color="inherit" />
+                </IconButton>
+              )}
+            </Box>
           </Box>
         ))}
-      </Card>
+      </Card>{" "}
+      <Snackbar
+        open={open}
+        autoHideDuration={5000}
+        onClose={handleClose}
+        message={snackbarMessage}
+      />
     </Container>
   );
 };
