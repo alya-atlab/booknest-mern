@@ -3,6 +3,8 @@ import type { Cart } from "../types/cart";
 import api from "../api/axios";
 import axios from "axios";
 import {
+  Alert,
+  Backdrop,
   Box,
   Button,
   Card,
@@ -28,6 +30,8 @@ const CartPage = () => {
   const [error, setError] = useState<string>("");
   const [open, setOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [backdropOpen, setBackdropOpen] = useState(false);
+  const [successOrder, setSuccessOrder] = useState(false);
 
   useEffect(() => {
     const getCart = async () => {
@@ -103,6 +107,24 @@ const CartPage = () => {
     }
 
     setOpen(false);
+    setSuccessOrder(false);
+  };
+  const handleCheckout = async () => {
+    setBackdropOpen(true);
+    try {
+      const res = await api.post("/orders");
+      setCart({
+        ...cart!,
+        items: [],
+      });
+
+      setSuccessOrder(true);
+      console.log(res.data.data);
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setBackdropOpen(false);
+    }
   };
   if (loading) {
     return (
@@ -157,9 +179,26 @@ const CartPage = () => {
         >
           Cart is empty!
         </Typography>
+        <Snackbar
+          open={successOrder}
+          autoHideDuration={6000}
+          onClose={handleClose}
+        >
+          <Alert
+            onClose={handleClose}
+            severity="success"
+            variant="filled"
+            sx={{ width: "100%" }}
+          >
+            Your order created successfully
+          </Alert>
+        </Snackbar>
       </Container>
     );
   }
+  const totalAmount = cart.items.reduce((acc, curr) => {
+    return acc + curr.bookId.price * curr.quantity;
+  }, 0);
   return (
     <Container
       maxWidth="md"
@@ -325,13 +364,40 @@ const CartPage = () => {
             </Box>
           </Box>
         ))}
-      </Card>{" "}
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            width: "100%",
+            m: 3,
+            alignItems: "center",
+          }}
+        >
+          <Typography variant="h6">
+            Total Amount: ${totalAmount.toFixed(2)}
+          </Typography>
+          <Button
+            size="large"
+            variant="contained"
+            sx={{ backgroundColor: "#333" }}
+            onClick={handleCheckout}
+          >
+            Check Out
+          </Button>
+        </Box>
+      </Card>
       <Snackbar
         open={open}
         autoHideDuration={5000}
         onClose={handleClose}
         message={snackbarMessage}
       />
+      <Backdrop
+        sx={(theme) => ({ color: "#0e0d0d", zIndex: theme.zIndex.drawer + 1 })}
+        open={backdropOpen}
+      >
+        <CircularProgress color="inherit" />
+      </Backdrop>
     </Container>
   );
 };
