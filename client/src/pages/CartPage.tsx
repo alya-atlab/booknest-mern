@@ -70,12 +70,7 @@ const CartPage = () => {
       });
       setCart(res.data.data);
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        console.log(error.response?.data);
-        setSnackbarMessage(error.response?.data.message);
-
-        handleClick();
-      }
+      handleApiError(error, "Failed to update quantity");
     } finally {
       setLoadingItemId(null);
       setLoadingAction(null);
@@ -88,14 +83,29 @@ const CartPage = () => {
       const res = await api.delete(`/cart/${bookId}`, {});
       setCart(res.data.data);
     } catch (error) {
-      console.log(error);
+      handleApiError(error, "Failed to remove item");
     } finally {
       setLoadingItemId(null);
       setLoadingAction(null);
     }
   };
-  const handleClick = () => {
-    setOpen(true);
+
+  const handleCheckout = async () => {
+    setBackdropOpen(true);
+    try {
+      const res = await api.post("/orders");
+      setCart({
+        ...cart!,
+        items: [],
+      });
+
+      setSuccessOrder(true);
+      console.log(res.data.data);
+    } catch (error) {
+      handleApiError(error, "Checkout failed. Please try again.");
+    } finally {
+      setBackdropOpen(false);
+    }
   };
 
   const handleClose = (
@@ -109,23 +119,22 @@ const CartPage = () => {
     setOpen(false);
     setSuccessOrder(false);
   };
-  const handleCheckout = async () => {
-    setBackdropOpen(true);
-    try {
-      const res = await api.post("/orders");
-      setCart({
-        ...cart!,
-        items: [],
-      });
+  const handleApiError = (
+    error: unknown,
+    fallbackMessage = "Something went wrong",
+  ) => {
+    let message = fallbackMessage;
 
-      setSuccessOrder(true);
-      console.log(res.data.data);
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setBackdropOpen(false);
+    if (axios.isAxiosError(error)) {
+      message = error.response?.data?.message || fallbackMessage;
+    } else {
+      message = fallbackMessage;
     }
+
+    setSnackbarMessage(message);
+    setOpen(true);
   };
+
   if (loading) {
     return (
       <Container
@@ -379,8 +388,9 @@ const CartPage = () => {
           <Button
             size="large"
             variant="contained"
-            sx={{ backgroundColor: "#333" }}
+            sx={{ backgroundColor: "#333", opacity: backdropOpen ? 0.7 : 1 }}
             onClick={handleCheckout}
+            disabled={backdropOpen}
           >
             Check Out
           </Button>
