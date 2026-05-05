@@ -6,6 +6,7 @@ import Books from "./pages/Books";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import CartPage from "./pages/CartPage";
+import MyOrdersPage from "./pages/MyOrdersPage";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import AuthProvider from "./context/Auth/AuthProvider";
 
@@ -29,6 +30,14 @@ function App() {
           element={
             <ProtectedRoute>
               <CartPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/orders"
+          element={
+            <ProtectedRoute>
+              <MyOrdersPage />
             </ProtectedRoute>
           }
         />
