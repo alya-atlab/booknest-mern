@@ -269,7 +269,7 @@ const MyOrdersPage = () => {
               <Typography
                 sx={{ textAlign: "end", pr: 2, fontWeight: 500, fontSize: 22 }}
               >
-                Total Amount: ${selectedOrder?.totalAmount}
+                Total Amount: ${selectedOrder?.totalAmount.toFixed(2)}
               </Typography>
             </Box>
           </DialogContent>

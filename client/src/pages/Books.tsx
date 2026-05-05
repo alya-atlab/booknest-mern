@@ -22,9 +22,16 @@ const Books = () => {
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
-  const [open, setOpen] = useState<boolean>(false);
-  const snackbarMessage = "Book added to cart";
 
+  const [snackbar, setSnackbar] = useState<{
+    open: boolean;
+    message: string;
+    severity: "success" | "error";
+  }>({
+    open: false,
+    message: "",
+    severity: "success",
+  });
   useEffect(() => {
     const getBooks = async () => {
       try {
@@ -53,9 +60,20 @@ const Books = () => {
       await api.post("/cart", {
         bookId,
       });
-      setOpen(true);
+      setSnackbar({
+        open: true,
+        message: "Book added successfully",
+        severity: "success",
+      });
     } catch (error) {
-      console.error(error);
+      let errorMessage = "";
+
+      if (axios.isAxiosError(error)) {
+        errorMessage = error.response?.data?.message || "Something went wrong";
+      } else {
+        errorMessage = "Something went wrong";
+      }
+      setSnackbar({ open: true, message: errorMessage, severity: "error" });
     }
   };
   const onOpenDetails = (bookId: string) => {
@@ -68,7 +86,10 @@ const Books = () => {
     if (reason === "clickaway") {
       return;
     }
-    setOpen(false);
+    setSnackbar((prev) => ({
+      ...prev,
+      open: false,
+    }));
   };
 
   if (loading) {
@@ -129,14 +150,18 @@ const Books = () => {
           </Grid>
         ))}
       </Grid>
-      <Snackbar open={open} autoHideDuration={6000} onClose={handleClose}>
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={handleClose}
+      >
         <Alert
           onClose={handleClose}
-          severity="success"
+          severity={snackbar.severity}
           variant="filled"
           sx={{ width: "100%" }}
         >
-          {snackbarMessage}
+          {snackbar.message}
         </Alert>
       </Snackbar>
     </Container>
