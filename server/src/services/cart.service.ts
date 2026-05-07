@@ -36,11 +36,17 @@ export const addToCart = async ({ userId, bookId }: AddToCartInput) => {
   if (!book) {
     throw new ApiError("Book not found", 404);
   }
+  if (book.stock === 0) {
+    throw new ApiError("Out of stock", 400);
+  }
   const userCart = await getCart(userId);
   const existingItem = userCart.items.find((item) =>
     item.bookId.equals(bookId),
   );
   if (existingItem) {
+    if (existingItem.quantity + 1 > book.stock) {
+      throw new ApiError("Requested quantity exceeds available stock", 400);
+    }
     existingItem.quantity += 1;
   } else {
     userCart.items.push({ bookId, quantity: 1 });
@@ -59,10 +65,16 @@ export const updateItem = async ({
   bookId,
   quantity,
 }: UpdateItemInput) => {
-  const cart = await getCart(userId);
+  const cart = await cartModel.findOne({ userId });
+  if (!cart) {
+    throw new ApiError("Cart not found", 404);
+  }
   const item = cart.items.find((item) => item.bookId.equals(bookId));
   if (!item) {
     throw new ApiError("Item not found", 404);
+  }
+  if (quantity < 0) {
+    throw new ApiError("Quantity cannot be negative", 400);
   }
   if (quantity === 0) {
     cart.items = cart.items.filter((i) => !i.bookId.equals(bookId));
@@ -81,7 +93,7 @@ export const updateItem = async ({
   }
   item.quantity = quantity;
   await cart.save();
-  return cart;
+  return cart.populate("items.bookId", "title price author coverImage");
 };
 interface DeleteItemInput {
   userId: Types.ObjectId;
