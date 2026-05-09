@@ -13,7 +13,7 @@ const protect = (req: Request, res: Response, next: NextFunction) => {
     return next(new ApiError("Unauthorized", 401));
   }
   if (!process.env.JWT_SECRET) {
-    return next(new ApiError("JWT_SECRET is not defined", 403));
+    return next(new ApiError("JWT_SECRET is not defined", 500));
   }
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
