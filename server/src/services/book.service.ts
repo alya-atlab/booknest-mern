@@ -2,7 +2,6 @@ import { Types } from "mongoose";
 import bookModel from "../models/books.model";
 import { ApiError } from "../utils/ApiError";
 
-
 interface BookInput {
   title: string;
   description: string;
@@ -47,7 +46,7 @@ export const createBook = async (
   if (price <= 0) {
     throw new ApiError("Invalid price", 400);
   }
-  if (price <= 0) {
+  if (stock <= 0) {
     throw new ApiError("Invalid stock", 400);
   }
   const existingBook = await bookModel.findOne({ title: title, author });
@@ -126,7 +125,7 @@ export interface BookUpdateInput {
   description?: string;
   price?: number;
   coverImage?: string;
-  stock?:number
+  stock?: number;
 }
 export const updateBook = async (
   bookId: Types.ObjectId,

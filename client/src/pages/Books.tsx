@@ -77,7 +77,7 @@ const Books = () => {
     }
   };
   const onOpenDetails = (bookId: string) => {
-    console.log(bookId);
+    navigate(`/books/${bookId}`);
   };
   const handleClose = (
     _event?: React.SyntheticEvent | Event,

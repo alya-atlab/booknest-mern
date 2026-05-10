@@ -9,6 +9,7 @@ import CartPage from "./pages/CartPage";
 import MyOrdersPage from "./pages/MyOrdersPage";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import AuthProvider from "./context/Auth/AuthProvider";
+import BookDetailsPage from "./pages/BookDetailsPage";
 
 function App() {
   const location = useLocation();
@@ -22,6 +23,7 @@ function App() {
 
       <Routes>
         <Route path="/" element={<Books />} />
+        <Route path="/books/:id" element={<BookDetailsPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
 
