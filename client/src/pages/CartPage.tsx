@@ -1,6 +1,4 @@
 import { useEffect, useState } from "react";
-import type { Cart } from "../types/cart";
-import api from "../api/axios";
 import axios from "axios";
 import {
   Alert,
@@ -19,40 +17,26 @@ import {
   type SnackbarCloseReason,
 } from "@mui/material";
 import { AddCircle, Delete, RemoveCircle } from "@mui/icons-material";
+import { useCart } from "../context/Cart/CartContext";
 
 const CartPage = () => {
-  const [cart, setCart] = useState<Cart | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
   const [loadingItemId, setLoadingItemId] = useState<string | null>(null);
   const [loadingAction, setLoadingAction] = useState<
     "increment" | "decrement" | "remove" | null
   >(null);
-  const [error, setError] = useState<string>("");
   const [open, setOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [backdropOpen, setBackdropOpen] = useState(false);
   const [successOrder, setSuccessOrder] = useState(false);
-
-  useEffect(() => {
-    const getCart = async () => {
-      try {
-        setLoading(true);
-
-        const res = await api.get("/cart");
-        console.log(res.data.data);
-        setCart(res.data.data);
-      } catch (error) {
-        if (axios.isAxiosError(error)) {
-          setError(error.response?.data?.message || "Something went wrong");
-        } else {
-          setError("Unexpected error");
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-    getCart();
-  }, []);
+  const {
+    cart,
+    isLoading,
+    error,
+    updateItemInCart,
+    removeItemInCart,
+    checkout,
+  } = useCart();
+  useEffect(() => {}, []);
 
   const handleChangeQuantity = async (
     bookId: string,
@@ -65,10 +49,7 @@ const CartPage = () => {
     try {
       setLoadingItemId(bookId);
       setLoadingAction(action);
-      const res = await api.put(`/cart/${bookId}`, {
-        quantity: newQuantity,
-      });
-      setCart(res.data.data);
+      await updateItemInCart(bookId, newQuantity);
     } catch (error) {
       handleApiError(error, "Failed to update quantity");
     } finally {
@@ -80,8 +61,7 @@ const CartPage = () => {
     try {
       setLoadingItemId(bookId);
       setLoadingAction("remove");
-      const res = await api.delete(`/cart/${bookId}`, {});
-      setCart(res.data.data);
+      await removeItemInCart(bookId);
     } catch (error) {
       handleApiError(error, "Failed to remove item");
     } finally {
@@ -93,14 +73,9 @@ const CartPage = () => {
   const handleCheckout = async () => {
     setBackdropOpen(true);
     try {
-      const res = await api.post("/orders");
-      setCart({
-        ...cart!,
-        items: [],
-      });
+      await checkout();
 
       setSuccessOrder(true);
-      console.log(res.data.data);
     } catch (error) {
       handleApiError(error, "Checkout failed. Please try again.");
     } finally {
@@ -135,7 +110,7 @@ const CartPage = () => {
     setOpen(true);
   };
 
-  if (loading) {
+  if (isLoading && !cart) {
     return (
       <Container
         sx={{

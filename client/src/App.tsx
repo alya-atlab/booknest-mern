@@ -9,6 +9,7 @@ import CartPage from "./pages/CartPage";
 import MyOrdersPage from "./pages/MyOrdersPage";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
 import AuthProvider from "./context/Auth/AuthProvider";
+import CartProvider from "./context/Cart/CartProvider";
 import BookDetailsPage from "./pages/BookDetailsPage";
 
 function App() {
@@ -19,31 +20,33 @@ function App() {
 
   return (
     <AuthProvider>
-      {!hideNavbar && <NavBar />}
+      <CartProvider>
+        {!hideNavbar && <NavBar />}
 
-      <Routes>
-        <Route path="/" element={<Books />} />
-        <Route path="/books/:id" element={<BookDetailsPage />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
+        <Routes>
+          <Route path="/" element={<Books />} />
+          <Route path="/books/:id" element={<BookDetailsPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/register" element={<RegisterPage />} />
 
-        <Route
-          path="/cart"
-          element={
-            <ProtectedRoute>
-              <CartPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/orders"
-          element={
-            <ProtectedRoute>
-              <MyOrdersPage />
-            </ProtectedRoute>
-          }
-        />
-      </Routes>
+          <Route
+            path="/cart"
+            element={
+              <ProtectedRoute>
+                <CartPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/orders"
+            element={
+              <ProtectedRoute>
+                <MyOrdersPage />
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
+      </CartProvider>
     </AuthProvider>
   );
 }

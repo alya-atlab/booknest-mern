@@ -15,6 +15,7 @@ import {
 import BookCard from "../components/books/BookCard";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/Auth/AuthContext";
+import { useCart } from "../context/Cart/CartContext";
 
 const Books = () => {
   const navigate = useNavigate();
@@ -22,6 +23,7 @@ const Books = () => {
   const [books, setBooks] = useState<Book[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
+  const { addToCart } = useCart();
 
   const [snackbar, setSnackbar] = useState<{
     open: boolean;
@@ -57,9 +59,7 @@ const Books = () => {
       return navigate("/login", { replace: true });
     }
     try {
-      await api.post("/cart", {
-        bookId,
-      });
+      await addToCart(bookId);
       setSnackbar({
         open: true,
         message: "Book added successfully",
