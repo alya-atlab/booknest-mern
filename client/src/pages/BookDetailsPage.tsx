@@ -2,30 +2,50 @@ import { useEffect, useState } from "react";
 import type { Book } from "../types/book";
 import api from "../api/axios";
 import axios from "axios";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
+  Alert,
   Box,
   Button,
   CardContent,
   CardMedia,
+  CircularProgress,
   Container,
   Divider,
   Grid,
   Link,
   Skeleton,
+  Snackbar,
   Typography,
+  type SnackbarCloseReason,
 } from "@mui/material";
 import TaskAltIcon from "@mui/icons-material/TaskAlt";
 import FiberManualRecordIcon from "@mui/icons-material/FiberManualRecord";
 import HighlightOffTwoToneIcon from "@mui/icons-material/HighlightOffTwoTone";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import FavoriteBorderIcon from "@mui/icons-material/FavoriteBorder";
+import { useCart } from "../context/Cart/CartContext";
+import { useAuth } from "../context/Auth/AuthContext";
 
 const BookDetailsPage = () => {
+  const navigate = useNavigate();
   const [book, setBook] = useState<Book | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>("");
   const { id } = useParams();
+  const { addToCart } = useCart();
+  const { isAuthenticated } = useAuth();
+  const [isAddingToCart, setIsAddingToCart] = useState<boolean>(false);
+
+  const [snackbar, setSnackbar] = useState<{
+    open: boolean;
+    message: string;
+    severity: "success" | "error";
+  }>({
+    open: false,
+    message: "",
+    severity: "success",
+  });
   useEffect(() => {
     const fetchBook = async () => {
       try {
@@ -48,6 +68,7 @@ const BookDetailsPage = () => {
     };
     fetchBook();
   }, [id]);
+
   if (loading) {
     return (
       <Grid container spacing={2}>
@@ -100,7 +121,43 @@ const BookDetailsPage = () => {
       </Container>
     );
   }
+  const onAddToCart = async () => {
+    if (!isAuthenticated) {
+      return navigate("/login", { replace: true });
+    }
+    try {
+      setIsAddingToCart(true);
+      await addToCart(book._id);
+      setSnackbar({
+        open: true,
+        message: "Book added successfully",
+        severity: "success",
+      });
+    } catch (error) {
+      let errorMessage = "";
 
+      if (axios.isAxiosError(error)) {
+        errorMessage = error.response?.data?.message || "Something went wrong";
+      } else {
+        errorMessage = "Something went wrong";
+      }
+      setSnackbar({ open: true, message: errorMessage, severity: "error" });
+    } finally {
+      setIsAddingToCart(false);
+    }
+  };
+  const handleClose = (
+    _event?: React.SyntheticEvent | Event,
+    reason?: SnackbarCloseReason,
+  ) => {
+    if (reason === "clickaway") {
+      return;
+    }
+    setSnackbar((prev) => ({
+      ...prev,
+      open: false,
+    }));
+  };
   return (
     <Grid container spacing={2} sx={{ mt: 3, ml: 6, pl: 4 }}>
       <Box
@@ -131,7 +188,6 @@ const BookDetailsPage = () => {
           0 6px 6px rgba(0,0,0,0.18),
           inset 0 1px 1px rgba(255,255,255,0.15)
         `,
-           
           }}
           image={book.coverImage}
           alt={book.title}
@@ -198,9 +254,6 @@ const BookDetailsPage = () => {
           >
             <Button
               sx={{
-                display: "flex",
-                justifyContent: "flex-start",
-                gap: 1,
                 color: "#fff",
                 backgroundColor: "#BB6A2C",
                 pt: 1.5,
@@ -209,10 +262,22 @@ const BookDetailsPage = () => {
                 pl: 4,
                 fontSize: 13,
               }}
-              disabled={book.stock <= 0}
+              disabled={book.stock <= 0 || isAddingToCart}
+              onClick={onAddToCart}
             >
-              <ShoppingCartIcon />
-              Add to Cart
+              {isAddingToCart ? (
+                <CircularProgress
+                  aria-label="Loading…"
+                  size={16}
+                  sx={{ color: "#fff" }}
+                />
+              ) : (
+                <Box
+                  sx={{ display: "flex", justifyContent: "flex-start", gap: 1 }}
+                >
+                  <ShoppingCartIcon /> Add to Cart
+                </Box>
+              )}
             </Button>
             <Button
               sx={{
@@ -241,6 +306,20 @@ const BookDetailsPage = () => {
           </Box>
         </CardContent>
       </Box>
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={handleClose}
+      >
+        <Alert
+          onClose={handleClose}
+          severity={snackbar.severity}
+          variant="filled"
+          sx={{ width: "100%" }}
+        >
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Grid>
   );
 };

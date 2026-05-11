@@ -13,10 +13,24 @@ import { Link } from "react-router-dom";
 
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/Auth/AuthContext";
+import { useCart } from "../../context/Cart/CartContext";
+import Badge, { type BadgeProps } from "@mui/material/Badge";
+import { styled } from "@mui/material/styles";
 
+const StyledBadge = styled(Badge)<BadgeProps>(({ theme }) => ({
+  "& .MuiBadge-badge": {
+    right: -3,
+    top: 13,
+    border: `2px solid ${(theme.vars ?? theme).palette.background.paper}`,
+    padding: "0 4px",
+    color: "#fffefe",
+    background: "#000000be",
+  },
+}));
 function NavBar() {
   const navigate = useNavigate();
   const { isAuthenticated, logout } = useAuth();
+  const { cart } = useCart();
 
   const handleLogout = () => {
     logout();
@@ -66,8 +80,10 @@ function NavBar() {
                 <Button sx={{ color: "#000000be" }} onClick={handleLogout}>
                   Logout
                 </Button>
-                <IconButton component={Link} to="/cart">
-                  <ShoppingCartIcon sx={{ color: "#000000be" }} />
+                <IconButton aria-label="cart" component={Link} to="/cart">
+                  <StyledBadge badgeContent={cart?.items.length}>
+                    <ShoppingCartIcon sx={{ color: "#000000be" }} />
+                  </StyledBadge>
                 </IconButton>
               </Box>
             ) : (
