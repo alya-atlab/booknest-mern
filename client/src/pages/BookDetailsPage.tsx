@@ -55,7 +55,6 @@ const BookDetailsPage = () => {
         const res = await api.get(`/books/${id}`);
 
         setBook(res.data.data);
-        console.log(res.data.data);
       } catch (error) {
         if (axios.isAxiosError(error)) {
           setError(error.response?.data?.message || "Something went wrong");
@@ -72,7 +71,7 @@ const BookDetailsPage = () => {
   if (loading) {
     return (
       <Grid container spacing={2}>
-        <Box
+        <Box   data-testid="book-details-skeleton"
           sx={{
             height: "100%",
             m: 3,
