@@ -1,7 +1,7 @@
 import mongoose, { Schema, Document, Types } from "mongoose";
 import { ORDER_STATUS } from "../constants/order.constants";
 
-interface IOrderItems {
+export interface IOrderItems {
   bookId: Types.ObjectId;
   priceAtPurchase: number;
   quantity: number;
@@ -9,7 +9,7 @@ interface IOrderItems {
   title: string;
 }
 
-interface IOrder {
+export interface IOrder {
   userId: Types.ObjectId;
   items: IOrderItems[];
   totalAmount: number;

@@ -6,6 +6,7 @@ import {
   getOrderById as getOrderByIdService,
   updateStatus as updateStatusService,
   getOrdersForAuthor as getOrdersForAuthorService,
+  cancelOrder as cancelOrderService,
 } from "../services/order.service";
 import { Types } from "mongoose";
 import { ApiError } from "../utils/ApiError";
@@ -93,14 +94,32 @@ export const updateStatus = async (req: Request, res: Response) => {
 export const getOrdersForAuthor = async (req: Request, res: Response) => {
   const user = req.user;
   if (!user) throw new ApiError("Unauthorized", 401);
-   if (!Types.ObjectId.isValid(user._id)) {
-     throw new ApiError("Invalid Id", 400);
-   }
+  if (!Types.ObjectId.isValid(user._id)) {
+    throw new ApiError("Invalid Id", 400);
+  }
   const userId = new Types.ObjectId(user._id);
   const orders = await getOrdersForAuthorService(userId);
-    res.status(200).json({
-      success: true,
-      data: orders,
-    });
- }
-  
+  res.status(200).json({
+    success: true,
+    data: orders,
+  });
+};
+
+export const cancelOrder = async (req: Request, res: Response) => {
+  const user = req.user;
+  if (!user) throw new ApiError("Unauthorized", 401);
+  if (!Types.ObjectId.isValid(user._id)) {
+    throw new ApiError("Invalid Id", 400);
+  }
+  const userId = new Types.ObjectId(user._id);
+  const { id } = req.params;
+  if (typeof id !== "string" || !Types.ObjectId.isValid(id)) {
+    throw new ApiError("Invalid orderId", 400);
+  }
+  const orderId = new Types.ObjectId(id);
+  const order = await cancelOrderService({ userId, orderId });
+  res.status(200).json({
+    success: true,
+    data: order,
+  });
+};

@@ -1,7 +1,7 @@
-import mongoose, { Types } from "mongoose";
+import mongoose, { ClientSession, Types } from "mongoose";
 import { getCart } from "./cart.service";
 import { ApiError } from "../utils/ApiError";
-import orderModel from "../models/order.model";
+import orderModel, { IOrder } from "../models/order.model";
 import bookModel from "../models/books.model";
 import {
   ORDER_STATUS,
@@ -183,4 +183,58 @@ export const getOrdersForAuthor = async (authorId: Types.ObjectId) => {
   });
   authorOrders = authorOrders.filter(Boolean);
   return authorOrders;
+};
+const restoreStock = async (items: IOrder["items"], session: ClientSession) => {
+  for (const item of items) {
+    const bookId = item.bookId;
+    const quantity = item.quantity;
+    const result = await bookModel.findOneAndUpdate(
+      {
+        _id: bookId,
+      },
+      {
+        $inc: { stock: quantity },
+      },
+      { new: true, session },
+    );
+    if (!result) {
+      throw new ApiError("Book not found", 404);
+    }
+  }
+};
+
+interface CancelOrderInput {
+  orderId: Types.ObjectId;
+  userId: Types.ObjectId;
+}
+export const cancelOrder = async ({ orderId, userId }: CancelOrderInput) => {
+  const session = await mongoose.startSession();
+  try {
+    session.startTransaction();
+    const order = await orderModel.findById(orderId).session(session);
+    if (!order) {
+      throw new ApiError("Order not found", 404);
+    }
+    if (!order.userId.equals(userId)) {
+      throw new ApiError("Forbidden", 403);
+    }
+    if (order.status !== "pending") {
+      throw new ApiError("Cannot cancel order", 400);
+    }
+    await restoreStock(order.items, session);
+    order.status = "cancelled";
+    await order.save({ session });
+
+    await session.commitTransaction();
+    return order;
+  } catch (error) {
+    await session.abortTransaction();
+
+    if (error instanceof ApiError) {
+      throw error;
+    }
+    throw new ApiError("Cannot cancel order", 500);
+  } finally {
+    session.endSession();
+  }
 };

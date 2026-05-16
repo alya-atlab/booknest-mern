@@ -4,6 +4,7 @@ import mongoose, { Types } from "mongoose";
 import bookModel from "../models/books.model";
 import orderModel from "../models/order.model";
 import {
+  cancelOrder,
   getMyOrders,
   getOrderById,
   getOrdersForAuthor,
@@ -422,6 +423,166 @@ describe("Order service", () => {
       ).rejects.toMatchObject({
         statusCode: 404,
       });
+    });
+  });
+  describe("cancelOrder", () => {
+    it("should cancel pending order successfully", async () => {
+      const book = await bookModel.create({
+        title: "book",
+        description: "this is the book",
+        price: 15,
+        stock: 4,
+        coverImage: "image.jpg",
+        author: new Types.ObjectId(),
+      });
+      const order = await orderModel.create({
+        userId: new Types.ObjectId(),
+        items: [
+          {
+            bookId: book._id,
+            priceAtPurchase: 15,
+            quantity: 2,
+            authorId: new Types.ObjectId(),
+            title: "book",
+          },
+        ],
+        totalAmount: 30,
+        status: "pending",
+      });
+      const orderCanceled = await cancelOrder({
+        orderId: order._id,
+        userId: order.userId,
+      });
+      const newBook = await bookModel.findById(book._id);
+      expect(orderCanceled).toBeDefined();
+      expect(orderCanceled._id.toString()).toBe(order._id.toString());
+      expect(orderCanceled.status).toBe("cancelled");
+      expect(newBook?.stock).toBe(6);
+    });
+    it("should not allow a user to cancel another user's order", async () => {
+      const book = await bookModel.create({
+        title: "book",
+        description: "this is the book",
+        price: 15,
+        stock: 4,
+        coverImage: "image.jpg",
+        author: new Types.ObjectId(),
+      });
+      const order = await orderModel.create({
+        userId: new Types.ObjectId(),
+        items: [
+          {
+            bookId: book._id,
+            priceAtPurchase: 15,
+            quantity: 1,
+            authorId: new Types.ObjectId(),
+            title: "book",
+          },
+        ],
+        totalAmount: 30,
+        status: "pending",
+      });
+      await expect(
+        cancelOrder({
+          orderId: order._id,
+          userId: new Types.ObjectId(),
+        }),
+      ).rejects.toMatchObject({
+        statusCode: 403,
+      });
+      const newOrder = await orderModel.findById(order._id);
+      const newBook = await bookModel.findById(book._id);
+      expect(newOrder?.status).toBe("pending");
+      expect(newBook?.stock).toBe(4);
+    });
+    it("should not cancel non-pending order", async () => {
+      const book = await bookModel.create({
+        title: "book",
+        description: "this is the book",
+        price: 15,
+        stock: 4,
+        coverImage: "image.jpg",
+        author: new Types.ObjectId(),
+      });
+      const order = await orderModel.create({
+        userId: new Types.ObjectId(),
+        items: [
+          {
+            bookId: book._id,
+            priceAtPurchase: 15,
+            quantity: 1,
+            authorId: new Types.ObjectId(),
+            title: "book",
+          },
+        ],
+        totalAmount: 30,
+        status: "processing",
+      });
+      await expect(
+        cancelOrder({
+          orderId: order._id,
+          userId: order.userId,
+        }),
+      ).rejects.toMatchObject({
+        statusCode: 400,
+      });
+      const newOrder = await orderModel.findById(order._id);
+      const newBook = await bookModel.findById(book._id);
+      expect(newOrder?.status).toBe("processing");
+      expect(newBook?.stock).toBe(4);
+    });
+    it("should throw 404 when order does not exist", async () => {
+      await expect(
+        cancelOrder({
+          orderId: new Types.ObjectId(),
+          userId: new Types.ObjectId(),
+        }),
+      ).rejects.toMatchObject({
+        statusCode: 404,
+      });
+    });
+    it("should rollback all changes when stock restoration fails", async () => {
+      const book = await bookModel.create({
+        title: "book",
+        description: "this is the book",
+        price: 15,
+        stock: 4,
+        coverImage: "image.jpg",
+        author: new Types.ObjectId(),
+      });
+      const order = await orderModel.create({
+        userId: new Types.ObjectId(),
+        items: [
+          {
+            bookId: book._id,
+            priceAtPurchase: 15,
+            quantity: 1,
+            authorId: new Types.ObjectId(),
+            title: "book",
+          },
+          {
+            bookId: new Types.ObjectId(),
+            priceAtPurchase: 20,
+            quantity: 1,
+            authorId: new Types.ObjectId(),
+            title: "book2",
+          },
+        ],
+        totalAmount: 30,
+        status: "pending",
+      });
+      await expect(
+        cancelOrder({
+          orderId: order._id,
+          userId: order.userId,
+        }),
+      ).rejects.toMatchObject({
+        statusCode: 404,
+      });
+      const newOrder = await orderModel.findById(order._id);
+      const newBook = await bookModel.findById(book._id);
+      expect(newOrder?.status).toBe("pending");
+      expect(newBook?.stock).toBe(4);
     });
   });
 });
